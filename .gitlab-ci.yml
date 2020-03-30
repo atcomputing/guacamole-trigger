@@ -1,0 +1,14 @@
+---
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+
+image:
+  name: maven:3.3.9-jdk-8
+
+build:
+  stage: build
+  script:
+    - 'mvn $MAVEN_CLI_OPTS verify'
+  artifacts:
+    paths:
+      - target
