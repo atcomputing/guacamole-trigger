@@ -17,7 +17,6 @@
     <build>
         <plugins>
 
-            <!-- Written for 1.6 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

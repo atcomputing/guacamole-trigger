@@ -6,7 +6,7 @@
     "namespace" : "guacamole-trigger",
 
     "listeners" : [
-        "org.apache.guacamole.event.guacamole-trigger"
+        "org.apache.guacamole.event.GuacamoleTrigger"
     ]
 
 }
