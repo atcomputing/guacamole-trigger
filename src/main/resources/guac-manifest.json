@@ -1,0 +1,12 @@
+{
+
+    "guacamoleVersion" : "1.1.0",
+
+    "name"      : "Guacamole Trigger Extension",
+    "namespace" : "guacamole-trigger",
+
+    "listeners" : [
+        "org.apache.guacamole.event.guacamole-trigger"
+    ]
+
+}
