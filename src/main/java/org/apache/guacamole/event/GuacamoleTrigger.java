@@ -35,6 +35,12 @@ public class GuacamoleTrigger implements Listener {
     private static final Logger logger =
         LoggerFactory.getLogger(GuacamoleTrigger.class);
 
+    private Environment settings;
+
+    public GuacamoleTrigger() throws GuacamoleException{
+        this.settings = new LocalEnvironment();
+    }
+
     @Override
     public void handleEvent(Object event) throws GuacamoleException{
 
@@ -47,7 +53,6 @@ public class GuacamoleTrigger implements Listener {
 
     private void handleTunnelConnectEvent(TunnelConnectEvent tcEvent) throws GuacamoleException{
 
-        Environment settings = new LocalEnvironment();
 
         String command = settings.getProperty(GuacamoleTriggerProperties.START_COMMAND);
         if (command == null){
