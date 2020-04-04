@@ -59,7 +59,7 @@ public class GuacamoleTrigger implements Listener {
             logger.info("start-command not defined, skipping");
         } else {
 
-            String username = tcEvent.getCredentials().getUsername();
+            String guacamoleUsername = tcEvent.getCredentials().getUsername();
             GuacamoleSocket socket = tcEvent.getTunnel().getSocket();
 
             AuthenticatedUser authUser = tcEvent.getAuthenticatedUser();
@@ -96,7 +96,7 @@ public class GuacamoleTrigger implements Listener {
 
             if (! reachable){
                 Map<String,String> commandEnvironment = socketConfig.getParameters();
-                commandEnvironment.put("username",username);
+                commandEnvironment.put("guacamoleUsername", guacamoleUsername);
                 runCommand (command,commandEnvironment);
             }
 
