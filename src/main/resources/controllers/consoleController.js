@@ -19,8 +19,6 @@ angular.module('guacTrigger').controller('consoleController', ['$scope', '$route
         if ( connection.name) {
 
 
-            console.log(connection);
-            console.log(connection.tunnel.uuid);
             hostREST.getHost(connection.tunnel.uuid).then(
                 function setHost(host){
                     $scope.host = host||defaultHost;
@@ -28,13 +26,6 @@ angular.module('guacTrigger').controller('consoleController', ['$scope', '$route
 
                 },
                 function unknowHost(){$scope.host = defaultHost} );
-
-            console.log($scope.showBootNotification);
-            console.log($scope.host);
-            $scope.output +=1;
         }
     }, 5000)
-
-    $scope.output = 1 ;
-
 }]);

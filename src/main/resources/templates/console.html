@@ -4,7 +4,7 @@
     <div ng-if="!showBootNotification">
 
     <!-- TODO <div ng&#45;include="'/guacamole/app/notification/templates/guacNotification.html'"></div>  -->
-        <div class="notification" ng-class="notification.className" >
+        <div class="notification" ng-class="notification.className" style="width:100%">
 
             <!-- Notification title -->
             <div ng-show="notification.title" class="title-bar">
@@ -19,10 +19,15 @@
                    translate-values="{{notification.text.variables}}"></p>
 
                 <!-- Current progress -->
-                <div class="progress" ng-show="notification.progress"><div class="bar" ng-show="progressPercent" ng-style="{'width': progressPercent + '%'}"></div><div
+                <div class="progress" ng-show="notification.progress">
+                    <div class="bar" ng-show="progressPercent" ng-style="{'width': progressPercent + '%'}">
+                    </div>
+                    <div
                         ng-show="notification.progress.text"
                         translate="{{notification.progress.text}}"
-                        translate-values="{PROGRESS: notification.progress.value, UNIT: notification.progress.unit}"></div></div>
+                        translate-values="{PROGRESS: notification.progress.value, UNIT: notification.progress.unit}">
+                    </div>
+                </div>
 
                 <!-- Default action countdown text -->
                 <p class="countdown-text"
@@ -40,12 +45,12 @@
         </div>
     </div>
 
-    <div class="notification"  ng-if="showBootNotification">
+    <div class="notification"  ng-if="showBootNotification" style="width:100%;">
 
-        <div ng-show="notification.title" class="title-bar">
+        <div ng-show="notification.title" class="title-bar" style="margin:0px">
             <div class="title">"{{host.hostname}} is booting up"</div>
         </div>
-        <p class="text">{{host.console}} </p>
+        <p "text" style="white-space:pre; background-color:#1c1c1c; color: lightgrey; font-family: monospace;height: 400px; overflow-y: auto;padding:8p;margin:0px;">{{host.console}} </p>
 
     </div>
 </div>
