@@ -1,0 +1,51 @@
+<meta name="replace-children" content=".notification">
+<div ng-controller="consoleController" ng-if="!expectedCredentials">
+
+    <div ng-if="!showBootNotification">
+
+    <!-- TODO <div ng&#45;include="'/guacamole/app/notification/templates/guacNotification.html'"></div>  -->
+        <div class="notification" ng-class="notification.className" >
+
+            <!-- Notification title -->
+            <div ng-show="notification.title" class="title-bar">
+                <div class="title">{{notification.title | translate}}</div>
+            </div>
+
+            <div class="body">
+
+                <!-- Notification text -->
+                <p ng-show="notification.text" class="text"
+                   translate="{{notification.text.key}}"
+                   translate-values="{{notification.text.variables}}"></p>
+
+                <!-- Current progress -->
+                <div class="progress" ng-show="notification.progress"><div class="bar" ng-show="progressPercent" ng-style="{'width': progressPercent + '%'}"></div><div
+                        ng-show="notification.progress.text"
+                        translate="{{notification.progress.text}}"
+                        translate-values="{PROGRESS: notification.progress.value, UNIT: notification.progress.unit}"></div></div>
+
+                <!-- Default action countdown text -->
+                <p class="countdown-text"
+                   ng-show="notification.countdown.text"
+                   translate="{{notification.countdown.text}}"
+                   translate-values="{REMAINING: timeRemaining}"></p>
+
+            </div>
+
+            <!-- Buttons -->
+            <div ng-show="notification.actions.length" class="buttons">
+                <button ng-repeat="action in notification.actions" ng-click="action.callback()" ng-class="action.className">{{action.name | translate}}</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="notification"  ng-if="showBootNotification">
+
+        <div ng-show="notification.title" class="title-bar">
+            <div class="title">"{{host.hostname}} is booting up"</div>
+        </div>
+        <p class="text">{{host.console}} </p>
+
+    </div>
+</div>

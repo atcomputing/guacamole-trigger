@@ -1,4 +1,4 @@
-package org.apache.guacamole.event;
+package org.apache.guacamole.guacamoletrigger.auth;
 
 import org.apache.guacamole.properties.StringGuacamoleProperty;
 

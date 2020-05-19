@@ -6,7 +6,16 @@
     "namespace" : "guacamole-trigger",
 
     "listeners" : [
-        "org.apache.guacamole.event.GuacamoleTrigger"
-    ]
+        "org.apache.guacamole.guacamoletrigger.event.GuacamoleTrigger"
+    ],
+    "authProviders"    : [
+        "org.apache.guacamole.guacamoletrigger.auth.TriggerAuthenticationProvider"
+    ],
+    "js" : [
+        "triggerModule.js",
+        "controllers/consoleController.js",
+        "services/hostREST.js"
+    ],
+    "html" : [ "templates/console.html" ]
 
 }
