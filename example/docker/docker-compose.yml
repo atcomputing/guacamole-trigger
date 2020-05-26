@@ -1,0 +1,35 @@
+version: "3"
+services:
+
+  guacd:
+    container_name: guacd
+    image: guacamole/guacd
+    networks:
+      - guacamole
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  guacamole:
+    container_name: guacamole
+    build: ./guacamole
+    environment:
+      GUACD_HOSTNAME: guacd
+      #BASIC_USER_MAPPING: /etc/guacamole/user-mapping.xml
+      GUACAMOLE_HOME: /etc/guacamole
+      ENABLE_WEBSOCKET: "true"
+      START_COMMAND: "docker run --rm --network  docker_guacamole --name $$hostname  --hostname $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc"
+      GUACD_LOG_LEVEL: debug
+    volumes:
+      - ./extensions/:/etc/guacamole/extensions/:z
+      - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - guacamole
+    depends_on:
+      - guacd
+    ports:
+      - "80:8080"
+
+networks:
+  guacamole:
