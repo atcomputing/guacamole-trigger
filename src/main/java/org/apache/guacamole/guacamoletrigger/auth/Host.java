@@ -135,7 +135,7 @@ public class Host  {
                     logger.info("cmd: {}, status:{}", command,status.name());
 
                             console = new Console (
-                                line -> logger.info("stdout: {}", line)
+                                line -> logger.debug("stdout: {}", line)
                                 ,line -> logger.info("stderr: {}", line)
                             );
                     Executors.newSingleThreadExecutor().execute(new Runnable() {
