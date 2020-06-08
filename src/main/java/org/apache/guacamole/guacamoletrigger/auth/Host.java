@@ -141,8 +141,12 @@ public class Host  {
                     Executors.newSingleThreadExecutor().execute(new Runnable() {
                         @Override
                         public void run() {
-                            console.run(command ,commandEnvironment);
-                            status = hostStatus.RUNNING;
+                            int exitCode = console.run(command ,commandEnvironment);
+                            if (exitCode == 0){
+                                status = hostStatus.RUNNING;
+                            } else {
+                                status = hostStatus.UNKNOW;
+                            }
                         }
                     });
                 }

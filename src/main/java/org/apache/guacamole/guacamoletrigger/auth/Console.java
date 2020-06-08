@@ -33,7 +33,7 @@ public class Console {
         this.stderr = stderr;
     }
 
-    public void run (String command, Map<String,String> environment){
+    public int run (String command, Map<String,String> environment){
 
         // TODO why not lock at start? can start and stop run the same time?
         // there should never be more the 1 start job running same time per host
@@ -56,13 +56,13 @@ public class Console {
             StreamGobbler stderrGobbler = new StreamGobbler(process.getErrorStream(),stderr);
             Executors.newSingleThreadExecutor().submit(stderrGobbler);
 
-            process.waitFor();
+            return process.waitFor();
         } catch (IOException e){
             logger.error("could not start: {}\n{}", command, e.getMessage());
         } catch (InterruptedException e) {
             logger.error("command interupted: {} \n{}", command, e.getMessage());
         }
-        return;
+        return 1;  // fail
     }
     public String getBufferOutput(){
         StringBuilder strBuilder = new StringBuilder();
