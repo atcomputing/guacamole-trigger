@@ -1,8 +1,7 @@
-angular.module('guacTrigger').controller('consoleController', ['$scope', '$routeParams', '$injector', '$interval',
-    function consoleController($scope, $routeParams, $injector, $interval) {
+angular.module('guacTrigger').controller('hostController', ['$scope', '$routeParams', '$injector', '$interval',
+    function hostController($scope, $routeParams, $injector, $interval) {
 
     var hostREST                 = $injector.get('hostREST');
-
     var guacClientManager        = $injector.get('guacClientManager');
 
 

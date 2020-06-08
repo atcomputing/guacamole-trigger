@@ -13,9 +13,9 @@
     ],
     "js" : [
         "triggerModule.js",
-        "controllers/consoleController.js",
+        "controllers/hostController.js",
         "services/hostREST.js"
     ],
-    "html" : [ "templates/console.html" ]
+    "html" : [ "templates/notificationWrapper.html" ]
 
 }
