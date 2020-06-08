@@ -1,5 +1,5 @@
 angular.module('guacTrigger').factory('hostREST', ['$injector',
-        function quickConnectService($injector) {
+        function HostREST($injector) {
 
     // Required services
     var authenticationService = $injector.get('authenticationService');
