@@ -14,7 +14,8 @@
     "js" : [
         "triggerModule.js",
         "controllers/hostController.js",
-        "services/hostREST.js"
+        "services/hostREST.js",
+        "services/idleServices.js"
     ],
     "html" : [ "templates/notificationWrapper.html" ]
 
