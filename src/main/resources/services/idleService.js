@@ -1,5 +1,5 @@
-angular.module('guacTrigger').factory('idleServices', ['$timeout','$document',
-        function idleServices($timeout, $document) {
+angular.module('guacTrigger').factory('idleService', ['$timeout','$document',
+        function idleService($timeout, $document) {
 
     var service = {};
 
@@ -8,7 +8,6 @@ angular.module('guacTrigger').factory('idleServices', ['$timeout','$document',
     var TimeOut_Thread = null;
 
     function wakeup (){
-        console.log("waitingfor: " + waitingFor );
         var idleCallback = idleCallbacks[waitingFor].idleCallback();
         if (idleCallback){idleCallback()}
 
@@ -23,8 +22,6 @@ angular.module('guacTrigger').factory('idleServices', ['$timeout','$document',
 
             TimeOut_Thread = $timeout(function(){wakeup()}, idleTime);
 
-            console.log("first: " +  TimeOut_Thread);
-
             var bodyElement = angular.element($document);
 
             angular.forEach(['keydown', 'keyup', 'click', 'mousemove', 'DOMMouseScroll', 'mousewheel', 'mousedown', 'touchstart', 'touchmove', 'scroll', 'focus'],
@@ -37,15 +34,9 @@ angular.module('guacTrigger').factory('idleServices', ['$timeout','$document',
                              activeCallback:activeCallback});
         idleCallbacks.sort(function(a,b){return a.time - b.time});
 
-        console.log(idleCallbacks);
-        console.log(TimeOut_Thread);
     }
 
-
-
-            //TODO
     service.resetCountDown = function resetCountDown(){
-        console.log("reset:"+ waitingFor);
 
         /// Stop the pending timeout
         $timeout.cancel(TimeOut_Thread);
@@ -59,9 +50,9 @@ angular.module('guacTrigger').factory('idleServices', ['$timeout','$document',
 
         }
     }
+
+    // TODO
     // service.remove()
-
-
 
     return service;
 }]);

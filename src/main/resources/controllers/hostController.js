@@ -2,13 +2,9 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
     function hostController($scope, $routeParams, $injector, $interval) {
 
 
-    var idleServices             = $injector.get('idleServices');
     var hostREST                 = $injector.get('hostREST');
     var guacClientManager        = $injector.get('guacClientManager');
 
-    idleServices.idleCallback(5000,function () {console.log("idle 5000")},function () {console.log("active 5000")});
-    idleServices.idleCallback(10000,function () {console.log("idle 10000")},function () {console.log("active 10000")});
-    idleServices.idleCallback(15000,function () {console.log("idle 15000")});
     $scope.showBootNotification = false;
 
     var defaultHost = {hostname: "Host",
