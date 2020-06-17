@@ -1,14 +1,13 @@
-angular.module('guacTrigger').factory('hostREST', ['$injector',
-        function HostREST($injector) {
+angular.module('guacTrigger').factory('idleConfigREST', ['$injector',
+        function idleConfigREST($injector) {
 
     // Required services
     var authenticationService = $injector.get('authenticationService');
     var requestService        = $injector.get('requestService');
-    var idleConfigREST        = $injector.get('idleConfigREST');
 
     var service = {};
 
-    service.getHost = function getHost(host){
+    service.getConfig = function getConfig(){
 
         // Build HTTP parameters set
         var httpParameters = {
@@ -18,7 +17,7 @@ angular.module('guacTrigger').factory('hostREST', ['$injector',
         // Retrieve active connection
         return requestService({
             method  : 'GET',
-            url     : 'api/session/ext/trigger/host/' + encodeURIComponent(host),
+            url     : 'api/session/ext/trigger/config/',
             params  : httpParameters
         });
 

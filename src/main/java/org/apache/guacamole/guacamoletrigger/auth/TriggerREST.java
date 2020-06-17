@@ -13,6 +13,8 @@ import org.apache.guacamole.net.auth.User;
 
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
+import org.apache.guacamole.environment.Environment;
+import org.apache.guacamole.environment.LocalEnvironment;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class TriggerREST {
@@ -26,14 +28,26 @@ public class TriggerREST {
             this.user = user;
     }
 
+
+    @GET
+    @Path("config")
+    public Map<String, Integer> getConfig() throws GuacamoleException {
+
+        Environment settings= new LocalEnvironment();
+        Map<String,Integer> anser = new HashMap<String,Integer>();
+        anser.put("disconectTime",settings.getProperty(GuacamoleTriggerProperties.DISCONECT_TIME, 3600));
+        anser.put("idleTime",settings.getProperty(GuacamoleTriggerProperties.IDLE_TIME, 1800));
+        return anser;
+    }
+
     @GET
     @Path("host/{tunnelID}")
     public Map<String, String> getHost(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
         Host host = hosts.get(tunnelID);
-        Map<String,String> anser = new HashMap<String,String>();
 
         if (host != null && host.owner(tunnelID).getIdentifier() == user.getIdentifier() ){
 
+            Map<String,String> anser = new HashMap<String,String>();
             anser.put("hostname",host.getHostname());
             anser.put("status",host.getStatus());
             anser.put("console",host.getConsole());

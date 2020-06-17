@@ -16,6 +16,7 @@
         "controllers/hostController.js",
         "controllers/idleController.js",
         "services/hostREST.js",
+        "services/idleConfigREST.js",
         "services/idleService.js"
     ],
     "css" : [

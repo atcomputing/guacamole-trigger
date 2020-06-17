@@ -29,6 +29,7 @@ angular.module('guacTrigger').factory('idleService', ['$timeout','$document',
                  bodyElement.bind(EventName, function (e) { service.resetCountDown(e) });
             });
         }
+        // TODO if seconde time period is shorter then the first it will only become active after first resetCountDown
         idleCallbacks.push ({time:idleTime,
                              idleCallback: idleCallback,
                              activeCallback:activeCallback});

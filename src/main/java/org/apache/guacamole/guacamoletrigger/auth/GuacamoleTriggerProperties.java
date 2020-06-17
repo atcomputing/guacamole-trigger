@@ -7,6 +7,8 @@ import org.apache.guacamole.properties.IntegerGuacamoleProperty;
  * The properties defined here must be specified within
  * guacamole.properties to configure the tutorial authentication provider.
  */
+// TODO maybe make a config opbject
+
 public class GuacamoleTriggerProperties{
 
     /**
@@ -35,6 +37,22 @@ public class GuacamoleTriggerProperties{
 
         @Override
         public String getName() { return "shutdown-delay"; }
+
+    };
+
+    public static final IntegerGuacamoleProperty IDLE_TIME =
+        new IntegerGuacamoleProperty () {
+
+        @Override
+        public String getName() { return "idle-time"; }
+
+    };
+
+    public static final IntegerGuacamoleProperty DISCONECT_TIME =
+        new IntegerGuacamoleProperty () {
+
+        @Override
+        public String getName() { return "disconect-time"; }
 
     };
 
