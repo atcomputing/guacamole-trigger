@@ -19,7 +19,8 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$routePar
     idleServices.idleCallback(20000,disconnect);
 
     function disconnect () {
+        // TODO disconnect all. not only current
         guacClientManager.getManagedClient($routeParams.id).client.disconnect();
-        $scope.Idle = false;
+        $scope.idle = false;
     }
 }]);

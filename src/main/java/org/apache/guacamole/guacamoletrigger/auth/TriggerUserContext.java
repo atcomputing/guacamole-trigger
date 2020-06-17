@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import java.util.UUID;
-
 import org.apache.guacamole.net.auth.AbstractUserContext;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
 import org.apache.guacamole.net.auth.AuthenticationProvider;
@@ -17,12 +15,18 @@ import org.apache.guacamole.net.auth.simple.SimpleDirectory;
 import org.apache.guacamole.net.auth.simple.SimpleObjectPermissionSet;
 import org.apache.guacamole.net.auth.simple.SimpleUser;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
 import org.apache.guacamole.guacamoletrigger.auth.TriggerREST;
 import org.apache.guacamole.net.GuacamoleTunnel;
 
 public class TriggerUserContext extends AbstractUserContext {
+
+
+    private static final Logger logger = LoggerFactory.getLogger(TriggerUserContext.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
     /**
@@ -79,7 +83,6 @@ public class TriggerUserContext extends AbstractUserContext {
 
         // Set the authProvider to the calling authProvider object.
         this.authProvider = authProvider;
-
     }
 
     public static void registerConnection (AuthenticatedUser authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
@@ -89,28 +92,31 @@ public class TriggerUserContext extends AbstractUserContext {
 
         if (registeredHost == null) {
             registeredHost =  Host.getHost(authUser,tunnel);
-            registeredHost.start(authUser);
+            registeredHost.start(authUser); // TODO this will start a host that might already been started by different user
         } else {
            registeredHost.addTunnel(authUser,tunnel);
         }
         hosts.put(tunnelID,registeredHost);
     }
 
-    public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel){
-        UUID tunnelID = tunnel.getUUID();
+    public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {
+        String tunnelID = tunnel.getUUID().toString();
         Host registeredHost = hosts.get(tunnelID);
 
         if (registeredHost != null) {
-            registeredHost.removeTunnel(tunnel);
-            hosts.remove(tunnel.getUUID());
-            // TODO check if there are no longer any connection. andy maybe stop vm
+            hosts.remove(tunnelID);
+            registeredHost.removeTunnel(tunnel); // TODO tunnelid
+            if (registeredHost.openTunnels() <= 0 ){
+                registeredHost.scheduleStop();
+            }
+        } else {
+            logger.error("Can`t close unknow tunnel: " + tunnelID  );
         }
-
     }
 
     @Override
     public Directory<Connection> getConnectionDirectory() throws GuacamoleException {
-        return new SimpleDirectory();
+        return new SimpleDirectory<Connection>();
     }
 
     @Override
@@ -127,6 +133,4 @@ public class TriggerUserContext extends AbstractUserContext {
     public AuthenticationProvider getAuthenticationProvider() {
         return authProvider;
     }
-
 }
-

@@ -51,8 +51,5 @@ angular.module('guacTrigger').factory('idleService', ['$timeout','$document',
         }
     }
 
-    // TODO
-    // service.remove()
-
     return service;
 }]);

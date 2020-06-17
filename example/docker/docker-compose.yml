@@ -17,7 +17,8 @@ services:
       #BASIC_USER_MAPPING: /etc/guacamole/user-mapping.xml
       GUACAMOLE_HOME: /etc/guacamole
       ENABLE_WEBSOCKET: "true"
-      START_COMMAND: "timeout -s 9 15 docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc "
+      START_COMMAND: "timeout -s 9 15 docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
+      STOP_COMMAND: "docker stop -t 120  $$hostname"
       GUACD_LOG_LEVEL: debug
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z

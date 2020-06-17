@@ -8,28 +8,36 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
     $scope.showBootNotification = false;
 
     var defaultHost = {hostname: "Host",
-                       status: "UNKNOW"}
+                       status: "UNSET"}
 
+    $scope.host = defaultHost;
     function setHoststate() {
 
-        if (! $scope.client.tunnel.uuid) {return}
+
+        // there is already loggig that when connect there are no notifications
+        if ( $scope.host.status === "BOOTING"  || ["WAITING","CLIENT_ERROR"].includes($scope.client.clientState.connectionState)){
+            startPollingHost();
+        } else {
+            stopPollingHost();
+        }
+        if (! $scope.client.tunnel.uuid) {
+            // console.log("fail")
+            $scope.client = guacClientManager.getManagedClient($routeParams.id);
+            return
+        }
         hostREST.getHost($scope.client.tunnel.uuid).then(
             function setHost(host){
 
-                $scope.host = host||defaultHost;
-                // console.log("client: " + $scope.client.name + " status: " + $scope.host.status + " messages: " + $scope.host.console);
+                if (host){ $scope.host = host }
+                // console.log("connection2: " + $scope.client.clientState.connectionState + " client: " + $scope.client.name + " status: " + $scope.host.status + " messages: " + host.console);
                 $scope.showBootNotification = ($scope.host.status === "BOOTING")
 
-                if ( $scope.host.status === "BOOTING" || !$scope.client.name ){
-                    startPollingHost();
-                } else {
-                    stopPollingHost();
-                }
             },
             function unknowHost(){$scope.host = defaultHost} );
     }
 
     var pollingHost;
+
     function startPollingHost() {
 
         if ( angular.isDefined(pollingHost) ) return;
@@ -47,13 +55,13 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
     $scope.client = guacClientManager.getManagedClient($routeParams.id);
     $scope.$watch(
         function () {
-            return guacClientManager.getManagedClient($routeParams.id);
+            return guacClientManager.getManagedClient($routeParams.id).clientState.connectionState;
         },function () {
-            $scope.client = guacClientManager.getManagedClient($routeParams.id);
-            setHoststate();
-        } );
 
-    $scope.$watch('client.clientState.connectionState', function clientStateChanged(connectionState) {
-        setHoststate();
+
+            $scope.client = guacClientManager.getManagedClient($routeParams.id);
+
+            // console.log("connection3: " + $scope.client.clientState.connectionState + "client: " + $scope.client.name + " status: " + $scope.host.status + " messages: " + $scope.host.console);
+            setHoststate();
         });
 }]);

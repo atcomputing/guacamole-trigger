@@ -14,9 +14,6 @@ public class GuacamoleTriggerProperties{
      */
     private GuacamoleTriggerProperties() {}
 
-    /**
-     * The only user to allow.
-     */
     public static final StringGuacamoleProperty START_COMMAND =
         new StringGuacamoleProperty() {
 
@@ -24,4 +21,13 @@ public class GuacamoleTriggerProperties{
         public String getName() { return "start-command"; }
 
     };
+
+    public static final StringGuacamoleProperty STOP_COMMAND =
+        new StringGuacamoleProperty() {
+
+        @Override
+        public String getName() { return "stop-command"; }
+
+    };
+
 }

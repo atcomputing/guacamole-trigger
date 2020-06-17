@@ -10,19 +10,20 @@ import org.apache.guacamole.guacamoletrigger.auth.TriggerUserContext;
 public class GuacamoleTrigger implements Listener {
 
 
-    public GuacamoleTrigger() throws GuacamoleException{
-    }
+    public GuacamoleTrigger() throws GuacamoleException{}
 
     @Override
     public void handleEvent(Object event) throws GuacamoleException{
 
         if (event instanceof TunnelConnectEvent) {
+
             TunnelConnectEvent tcEvent = (TunnelConnectEvent) event;
             TriggerUserContext.registerConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel());
+
         }else if(event instanceof TunnelCloseEvent) {
+
             TunnelCloseEvent tcEvent = (TunnelCloseEvent) event;
-            // TODO no problems with concurency
-            // TriggerUserContext.deregisterConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel());
+            TriggerUserContext.deregisterConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel());
         }
     }
 

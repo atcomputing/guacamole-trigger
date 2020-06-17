@@ -5,7 +5,6 @@
             <param name="hostname">vnc</param>
             <param name="port">5901</param>
             <param name="password">test</param>
-            <param name="autoretry">=20</param>
         </connection>
         <connection name="vnc2">
             <protocol>vnc</protocol>

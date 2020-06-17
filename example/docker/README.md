@@ -5,6 +5,8 @@ It use a docker-compose file to start a guacamole and guacd container.
 guacamole is configers so it will start a new vnc container when you start to use it.
 guacamole need acces to docker.socket to start a new container.
 
+gucamole start command is configerd via the `START_COMMAND` environment variable.
+you can do this because: `enable-environment-properties: true` in guacamole.properties
 
 
 # Usage
@@ -20,6 +22,7 @@ now you can acces guacamole via:
 username: test
 passwords: test
 
+
 ### to stop demo
 
 ```
@@ -29,3 +32,4 @@ docker kill vnc # stop the potential started vnc containers
 docker kill vnc2
 ```
 
+#

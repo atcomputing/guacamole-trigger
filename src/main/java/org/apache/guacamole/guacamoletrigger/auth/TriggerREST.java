@@ -1,18 +1,17 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
-import java.util.UUID;
-import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.net.auth.User;
 
+import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
 
 @Produces(MediaType.APPLICATION_JSON)
