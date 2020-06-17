@@ -1,7 +1,7 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
 import org.apache.guacamole.properties.StringGuacamoleProperty;
-
+import org.apache.guacamole.properties.IntegerGuacamoleProperty;
 /**
  * Utility class containing all properties used by the plugin
  * The properties defined here must be specified within
@@ -27,6 +27,14 @@ public class GuacamoleTriggerProperties{
 
         @Override
         public String getName() { return "stop-command"; }
+
+    };
+
+    public static final IntegerGuacamoleProperty SHUTDOWN_DELAY =
+        new IntegerGuacamoleProperty () {
+
+        @Override
+        public String getName() { return "shutdown-delay"; }
 
     };
 

@@ -55,7 +55,6 @@ public class Host  {
 
     public static Host getHost(AuthenticatedUser authUser,GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException, GuacamoleException {
 
-        settings = new LocalEnvironment();
         GuacamoleSocket socket = tunnel.getSocket();
         if(!(socket instanceof ConfiguredGuacamoleSocket)){
 
@@ -67,6 +66,7 @@ public class Host  {
         Host host = hosts.get(hostname);
 
         if (host == null) {
+            settings = new LocalEnvironment();
             host = new Host(authUser,tunnel.getUUID().toString(), socketConfig);
             hosts.put(hostname,host);
         } else {
@@ -130,6 +130,7 @@ public class Host  {
     public void scheduleStop() throws GuacamoleException {
 
         String command = settings.getProperty(GuacamoleTriggerProperties.STOP_COMMAND);
+        Integer shutdownDelay = settings.getProperty(GuacamoleTriggerProperties.SHUTDOWN_DELAY, 300);
         if (command == null){ ;
 
             logger.info("no stop command provide. dont schedule stopping: {}", this.hostname);
@@ -156,7 +157,7 @@ public class Host  {
                             status = hostStatus.UNKNOW;
                         }
                     }
-                },30,TimeUnit.SECONDS); // TODO make configerable
+                }, shutdownDelay, TimeUnit.SECONDS); // TODO make configerable
             }
             // TODO can terminated host be removed from hosts?
             // and what if there is no shutdown
