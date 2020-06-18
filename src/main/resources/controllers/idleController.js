@@ -1,5 +1,5 @@
-angular.module('guacTrigger').controller('idleController', ['$scope', '$routeParams','$injector',
-    function idleController($scope, $routeParams, $injector) {
+angular.module('guacTrigger').controller('idleController', ['$scope', '$injector',
+    function idleController($scope, $injector) {
 
     var idleServices             = $injector.get('idleService');
     var guacClientManager        = $injector.get('guacClientManager');
@@ -24,8 +24,7 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$routePar
     idleConfigREST.getConfig().then(setTimers);
 
     function disconnect () {
-        // TODO disconnect all. not only current
-        guacClientManager.getManagedClient($routeParams.id).client.disconnect();
+        guacClientManager.clear()
         $scope.idle = false;
     }
 }]);
