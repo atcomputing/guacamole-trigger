@@ -23,7 +23,7 @@ public class GuacamoleTrigger implements Listener {
         }else if(event instanceof TunnelCloseEvent) {
 
             TunnelCloseEvent tcEvent = (TunnelCloseEvent) event;
-            TriggerUserContext.deregisterConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel());
+            TriggerUserContext.deregisterConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel()); //FIXME
         }
     }
 

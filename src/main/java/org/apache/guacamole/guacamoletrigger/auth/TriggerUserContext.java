@@ -1,8 +1,6 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.guacamole.net.auth.AbstractUserContext;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
@@ -28,7 +26,6 @@ public class TriggerUserContext extends AbstractUserContext {
 
     private static final Logger logger = LoggerFactory.getLogger(TriggerUserContext.class);
 
-    private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
     /**
      * The unique identifier of the root connection group.
      */
@@ -88,25 +85,24 @@ public class TriggerUserContext extends AbstractUserContext {
     public static void registerConnection (AuthenticatedUser authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         String tunnelID = tunnel.getUUID().toString();
-        Host registeredHost = hosts.get(tunnelID);
+        Host registeredHost = Host.findHost(tunnelID);
 
         if (registeredHost == null) {
             registeredHost =  Host.getHost(authUser,tunnel);
-            registeredHost.start(authUser); // TODO this will start a host that might already been started by different user
+            registeredHost.start(authUser);
         } else {
-           registeredHost.addTunnel(authUser,tunnel);
+           registeredHost.addConnection(authUser,tunnel);
         }
-        hosts.put(tunnelID,registeredHost);
     }
 
     public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {
         String tunnelID = tunnel.getUUID().toString();
-        Host registeredHost = hosts.get(tunnelID);
+        Host registeredHost = Host.findHost(tunnelID);
+        logger.error(" close tunnel: " + tunnelID  );//FIXME
 
         if (registeredHost != null) {
-            hosts.remove(tunnelID);
-            registeredHost.removeTunnel(tunnel); // TODO tunnelid
-            if (registeredHost.openTunnels() <= 0 ){
+            registeredHost.removeConnection(tunnel); // TODO tunnelid
+            if (registeredHost.openConnections() <= 0 ){
                 registeredHost.scheduleStop();
             }
         } else {
@@ -126,7 +122,7 @@ public class TriggerUserContext extends AbstractUserContext {
 
     @Override
     public Object getResource() throws GuacamoleException {
-        return new TriggerREST(hosts, self());
+        return new TriggerREST(self());
     }
 
     @Override

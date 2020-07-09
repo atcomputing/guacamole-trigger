@@ -14,6 +14,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
     function setHoststate() {
 
 
+        $scope.client = guacClientManager.getManagedClient($routeParams.id);
         // there is already loggig that when connect there are no notifications
         if ( $scope.host.status === "BOOTING"  || ["WAITING","CLIENT_ERROR"].includes($scope.client.clientState.connectionState)){
             startPollingHost();
@@ -21,15 +22,14 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
             stopPollingHost();
         }
         if (! $scope.client.tunnel.uuid) {
-            // console.log("fail")
-            $scope.client = guacClientManager.getManagedClient($routeParams.id);
+            console.log("fail")
             return
         }
         hostREST.getHost($scope.client.tunnel.uuid).then(
             function setHost(host){
 
                 if (host){ $scope.host = host }
-                // console.log("connection2: " + $scope.client.clientState.connectionState + " client: " + $scope.client.name + " status: " + $scope.host.status + " messages: " + host.console);
+                console.log("connection2: " + $scope.client.clientState.connectionState + " client: " + $scope.client.name + " status: " + $scope.host.status + " messages: " + host.console);
                 $scope.showBootNotification = ($scope.host.status === "BOOTING")
 
             },

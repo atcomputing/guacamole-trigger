@@ -24,6 +24,7 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
     idleConfigREST.getConfig().then(setTimers);
 
     function disconnect () {
+        console.log("disconnect")
         guacClientManager.clear()
         $scope.idle = false;
     }

@@ -39,15 +39,17 @@ public class Host  {
 
 
     private Console console;
+
     private ScheduledFuture<?> shutdown;
     private hostStatus status = hostStatus.UNKNOW;
     private String hostname;
-
+    private int connections = 0; //TODO race condition
     private static Environment settings;
     private static final Logger logger = LoggerFactory.getLogger(Host.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
-    private ConcurrentMap<String,AuthenticatedUser> tunnels ;
+    private static ConcurrentMap<String,Host> tunnelId2Host = new ConcurrentHashMap<String,Host>();
+    private ConcurrentMap<String,String> tunnelId2User= new ConcurrentHashMap<String,String>();
 
     // this is used for createing environment variable for starting en stoping command
     // TODO do we need all of this? there can be more then 1 config for a host. mybe only use hostname
@@ -67,38 +69,54 @@ public class Host  {
 
         if (host == null) {
             settings = new LocalEnvironment();
-            host = new Host(authUser,tunnel.getUUID().toString(), socketConfig);
+            host = new Host(authUser,tunnel, socketConfig);
             hosts.put(hostname,host);
         } else {
-            host.addTunnel(authUser, tunnel);
+
+            host.addConnection(authUser, tunnel);
         }
 
         return host;
 
     }
-    private Host(AuthenticatedUser user,String tunnelID,GuacamoleConfiguration socketConfig) throws GuacamoleUnsupportedException, GuacamoleException {
+    private Host(AuthenticatedUser user,GuacamoleTunnel tunnel,GuacamoleConfiguration socketConfig) throws GuacamoleUnsupportedException, GuacamoleException {
 
             this.socketConfig = socketConfig;
             this.hostname = socketConfig.getParameter("hostname");
             // This is for the future, to be able to check howmany connection use this host. and if it can be truned off.
-            tunnels = new ConcurrentHashMap<String,AuthenticatedUser>();
-            tunnels.put(tunnelID,user);
 
+            addConnection(user,tunnel);
     }
 
-    public void addTunnel(AuthenticatedUser user, GuacamoleTunnel tunnel) {
+    public static Host findHost (String tunnelID, String username ){
 
-        tunnels.put(tunnel.getUUID().toString(), user);
+        Host host = findHost(tunnelID);
+        if (host != null && username == host.owner(tunnelID)){
+            return  host;
+        }
+        return null;
     }
 
-    public void removeTunnel(GuacamoleTunnel tunnel) {
-
-        tunnels.remove(tunnel.getUUID().toString());
+    public static Host findHost (String tunnelID){
+        return tunnelId2Host.get(tunnelID);
     }
 
-    public AuthenticatedUser owner(String tunnelID){
+    public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
-        return tunnels.get(tunnelID);
+        connections++;
+        tunnelId2Host.put(tunnel.getUUID().toString(), this);
+        tunnelId2User.put(tunnel.getUUID().toString(), user.getCredentials().getUsername());
+    }
+
+    public void removeConnection(GuacamoleTunnel tunnel) {
+
+        connections--;
+        // tunnels.remove(tunnel.getUUID().toString());
+    }
+
+    public String owner(String tunnelID){
+
+        return tunnelId2User.get(tunnelID);
     }
 
     public String getHostname (){
@@ -163,8 +181,9 @@ public class Host  {
             // and what if there is no shutdown
     }
 
-    public int openTunnels() {
-        return tunnels.size();
+    public int openConnections() {
+        return connections;
+        // return tunnels.size();
     }
 
     public void start (AuthenticatedUser authUser) throws GuacamoleException {

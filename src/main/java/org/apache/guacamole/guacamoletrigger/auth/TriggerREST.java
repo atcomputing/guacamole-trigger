@@ -19,12 +19,9 @@ import org.apache.guacamole.environment.LocalEnvironment;
 @Produces(MediaType.APPLICATION_JSON)
 public class TriggerREST {
 
-    private Map<String,Host> hosts;
-
     private User user;
 
-    public TriggerREST(Map<String,Host> hosts, User user){
-            this.hosts = hosts;
+    public TriggerREST(User user){
             this.user = user;
     }
 
@@ -43,9 +40,9 @@ public class TriggerREST {
     @GET
     @Path("host/{tunnelID}")
     public Map<String, String> getHost(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
-        Host host = hosts.get(tunnelID);
+        Host host = Host.findHost(tunnelID, user.getIdentifier());
 
-        if (host != null && host.owner(tunnelID).getIdentifier() == user.getIdentifier() ){
+        if (host != null ){
 
             Map<String,String> anser = new HashMap<String,String>();
             anser.put("hostname",host.getHostname());
@@ -53,6 +50,7 @@ public class TriggerREST {
             anser.put("console",host.getConsole());
             return anser;
         }
+        System.out.println("could not find " +  tunnelID);
         return null;
     }
 }
