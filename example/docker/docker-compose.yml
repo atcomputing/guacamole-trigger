@@ -26,6 +26,7 @@ services:
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z
+      - ./logback.xml:/etc/guacamole/logback.xml:z
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
     networks:

@@ -65,8 +65,11 @@ public class Console {
     }
     public String getBufferOutput(){
         StringBuilder strBuilder = new StringBuilder();
+        System.out.println(buffer.size());
         lock.readLock().lock();
-        buffer.forEach((line) -> {strBuilder.append(line).append("\n");});
+        buffer.forEach((line) -> {
+            strBuilder.append(line).append("\n");
+        });
         lock.readLock().unlock();
         return strBuilder.toString();
 
@@ -86,6 +89,7 @@ public class Console {
 
             new BufferedReader(new InputStreamReader(inputStream)).lines().forEach( line ->{
                 lock.writeLock().lock();
+                System.out.println(line);
                 buffer.add(line.substring(0, Math.min(line.length(), 120)));
                 lock.writeLock().unlock();
                 consumer.accept(line);

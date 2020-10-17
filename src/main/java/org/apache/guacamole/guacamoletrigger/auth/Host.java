@@ -37,7 +37,6 @@ public class Host  {
         // FAILTOBOOT
     };
 
-
     private Console console;
 
     private ScheduledFuture<?> shutdown;
@@ -48,14 +47,13 @@ public class Host  {
     private static final Logger logger = LoggerFactory.getLogger(Host.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
-    private static ConcurrentMap<String,Host> tunnelId2Host = new ConcurrentHashMap<String,Host>();
-    private ConcurrentMap<String,String> tunnelId2User= new ConcurrentHashMap<String,String>();
 
     // this is used for createing environment variable for starting en stoping command
     // TODO do we need all of this? there can be more then 1 config for a host. mybe only use hostname
     private GuacamoleConfiguration socketConfig;
 
-    public static Host getHost(AuthenticatedUser authUser,GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException, GuacamoleException {
+
+    public static Host findHost (GuacamoleTunnel tunnel)throws GuacamoleUnsupportedException{
 
         GuacamoleSocket socket = tunnel.getSocket();
         if(!(socket instanceof ConfiguredGuacamoleSocket)){
@@ -65,17 +63,30 @@ public class Host  {
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
         String hostname = socketConfig.getParameter("hostname");
-        Host host = hosts.get(hostname);
+        return hosts.get(hostname);
+    }
 
+    public static Host getHost(AuthenticatedUser authUser,GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException, GuacamoleException {
+
+        // TODO remove not neeted when we dont use socket config
+        GuacamoleSocket socket = tunnel.getSocket();
+        if(!(socket instanceof ConfiguredGuacamoleSocket)){
+
+            throw new GuacamoleUnsupportedException("can't handle unconfigerd sockets");
+        }
+
+        GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
+        Host host = findHost(tunnel);
         if (host == null) {
-            settings = new LocalEnvironment();
+            settings = new LocalEnvironment(); // TODO do we have to reinitalise static variable
             host = new Host(authUser,tunnel, socketConfig);
-            hosts.put(hostname,host);
+            hosts.put(host.getHostname(),host);
         } else {
 
             host.addConnection(authUser, tunnel);
         }
 
+        System.out.println("hostname:" + host.getHostname());
         return host;
 
     }
@@ -88,35 +99,14 @@ public class Host  {
             addConnection(user,tunnel);
     }
 
-    public static Host findHost (String tunnelID, String username ){
-
-        Host host = findHost(tunnelID);
-        if (host != null && username == host.owner(tunnelID)){
-            return  host;
-        }
-        return null;
-    }
-
-    public static Host findHost (String tunnelID){
-        return tunnelId2Host.get(tunnelID);
-    }
-
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
         connections++;
-        tunnelId2Host.put(tunnel.getUUID().toString(), this);
-        tunnelId2User.put(tunnel.getUUID().toString(), user.getCredentials().getUsername());
     }
 
     public void removeConnection(GuacamoleTunnel tunnel) {
 
         connections--;
-        // tunnels.remove(tunnel.getUUID().toString());
-    }
-
-    public String owner(String tunnelID){
-
-        return tunnelId2User.get(tunnelID);
     }
 
     public String getHostname (){

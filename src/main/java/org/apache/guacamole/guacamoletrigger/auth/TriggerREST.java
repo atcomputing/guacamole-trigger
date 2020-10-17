@@ -13,16 +13,17 @@ import org.apache.guacamole.net.auth.User;
 
 import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
+import org.apache.guacamole.guacamoletrigger.auth.TunnelBuffer;
 import org.apache.guacamole.environment.Environment;
 import org.apache.guacamole.environment.LocalEnvironment;
 
 @Produces(MediaType.APPLICATION_JSON)
 public class TriggerREST {
 
-    private User user;
+    private TunnelBuffer tunnelBuffer ;
 
-    public TriggerREST(User user){
-            this.user = user;
+    public TriggerREST(TunnelBuffer tunnelBuffer){
+            this.tunnelBuffer = tunnelBuffer;
     }
 
 
@@ -40,8 +41,8 @@ public class TriggerREST {
     @GET
     @Path("host/{tunnelID}")
     public Map<String, String> getHost(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
-        Host host = Host.findHost(tunnelID, user.getIdentifier());
 
+        Host host = tunnelBuffer.get(tunnelID);
         if (host != null ){
 
             Map<String,String> anser = new HashMap<String,String>();
