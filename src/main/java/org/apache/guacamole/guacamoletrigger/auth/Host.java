@@ -37,7 +37,10 @@ public class Host  {
         // FAILTOBOOT
     };
 
-    private Console console;
+    private Console console = new Console (
+                    line -> logger.debug("stdout: {}", line),
+                    line -> logger.info("stderr: {}", line)
+                );
 
     private ScheduledFuture<?> shutdown;
     private hostStatus status = hostStatus.UNKNOW;
@@ -63,6 +66,7 @@ public class Host  {
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
         String hostname = socketConfig.getParameter("hostname");
+
         return hosts.get(hostname);
     }
 
@@ -80,13 +84,12 @@ public class Host  {
         if (host == null) {
             settings = new LocalEnvironment(); // TODO do we have to reinitalise static variable
             host = new Host(authUser,tunnel, socketConfig);
-            hosts.put(host.getHostname(),host);
+
         } else {
 
             host.addConnection(authUser, tunnel);
         }
 
-        System.out.println("hostname:" + host.getHostname());
         return host;
 
     }
@@ -96,17 +99,21 @@ public class Host  {
             this.hostname = socketConfig.getParameter("hostname");
             // This is for the future, to be able to check howmany connection use this host. and if it can be truned off.
 
+            hosts.put(hostname,this);
             addConnection(user,tunnel);
     }
 
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
         connections++;
+        System.out.printf("connect: %s #%d\n", tunnel.getUUID().toString(), +  connections);
     }
 
     public void removeConnection(GuacamoleTunnel tunnel) {
 
+
         connections--;
+        System.out.printf("disconnect: %s #%d\n", tunnel.getUUID().toString(), +  connections);
     }
 
     public String getHostname (){
@@ -120,7 +127,7 @@ public class Host  {
         if (console != null){
             return console.getBufferOutput();
         } else {
-            return "No output yet";
+            return "No console output";
         }
     }
 
@@ -149,11 +156,6 @@ public class Host  {
 
             if (shutdown == null){
 
-                // TODO do we need console for this
-                console = new Console (
-                    line -> logger.debug("stdout: {}", line),
-                    line -> logger.info("stderr: {}", line)
-                );
                 shutdown = Executors.newScheduledThreadPool(1).schedule(new Runnable() {
                     @Override
                     public void run() {
@@ -165,7 +167,7 @@ public class Host  {
                             status = hostStatus.UNKNOW;
                         }
                     }
-                }, shutdownDelay, TimeUnit.SECONDS); // TODO make configerable
+                }, shutdownDelay, TimeUnit.SECONDS);
             }
             // TODO can terminated host be removed from hosts?
             // and what if there is no shutdown
@@ -176,7 +178,7 @@ public class Host  {
         // return tunnels.size();
     }
 
-    public void start (AuthenticatedUser authUser) throws GuacamoleException {
+    public void start (AuthenticatedUser authUser) throws GuacamoleException{
 
         if (shutdown != null) {
             shutdown.cancel(false);
@@ -201,10 +203,13 @@ public class Host  {
             if (status != hostStatus.BOOTING){
 
                 status = hostStatus.BOOTING;
-                console = new Console (
-                    line -> logger.debug("stdout: {}", line),
-                    line -> logger.info("stderr: {}", line)
-                );
+                console.clear();
+
+                // Need to run in background. otherswise connection visable after start has completed
+                // but we want to track connection in webinterface
+                // TODO maybe there exist a better place to do this for example in console(limit number of running jobs)
+                // or in handle event?
+
                 Executors.newSingleThreadExecutor().execute(new Runnable() {
                     @Override
                     public void run() {

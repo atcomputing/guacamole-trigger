@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader ;
 import java.lang.StringBuilder;
+
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Executors;
@@ -19,6 +20,7 @@ public class Console {
 
     ReadWriteLock lock = new ReentrantReadWriteLock();
     private static final Logger logger = LoggerFactory.getLogger(Console.class);
+
     private Queue<String> buffer = new CircularFifoQueue<String>(120);
     private Consumer<String> stdout;
     private Consumer<String> stderr;
@@ -55,7 +57,11 @@ public class Console {
             StreamGobbler stderrGobbler = new StreamGobbler(process.getErrorStream(),stderr);
             Executors.newSingleThreadExecutor().submit(stderrGobbler);
 
+            // TODO implement timeout for non terminating process
+            // process.waitFor(<command timeout>, TimeUnit.SECONDS);
+            // process.destroy();
             return process.waitFor();
+
         } catch (IOException e){
             logger.error("could not start: {}\n{}", command, e.getMessage());
         } catch (InterruptedException e) {
@@ -65,13 +71,20 @@ public class Console {
     }
     public String getBufferOutput(){
         StringBuilder strBuilder = new StringBuilder();
-        System.out.println(buffer.size());
         lock.readLock().lock();
         buffer.forEach((line) -> {
             strBuilder.append(line).append("\n");
         });
         lock.readLock().unlock();
         return strBuilder.toString();
+
+    }
+
+    public void clear(){
+        lock.writeLock().lock();
+        buffer.clear();
+        lock.writeLock().unlock();
+        return ;
 
     }
 
@@ -89,7 +102,6 @@ public class Console {
 
             new BufferedReader(new InputStreamReader(inputStream)).lines().forEach( line ->{
                 lock.writeLock().lock();
-                System.out.println(line);
                 buffer.add(line.substring(0, Math.min(line.length(), 120)));
                 lock.writeLock().unlock();
                 consumer.accept(line);

@@ -111,7 +111,7 @@ public class TriggerUserContext extends AbstractUserContext {
 
         if (registeredHost != null) {
             registeredHost.removeConnection(tunnel); // TODO tunnelid
-            if (registeredHost.openConnections() <= 0 ){
+            if (registeredHost.openConnections() <= 0 ){ // TODO do this in Host?
                 registeredHost.scheduleStop();
             }
         } else {

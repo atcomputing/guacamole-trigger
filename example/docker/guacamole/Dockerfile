@@ -1,4 +1,4 @@
-FROM guacamole/guacamole
+FROM guacamole/guacamole:1.2.0
 RUN ln -sf /opt/guacamole/guacamole.war /usr/local/tomcat/webapps/
 RUN mkdir -p /etc/guacamole
 RUN echo enable-environment-properties: true > /etc/guacamole/guacamole.properties

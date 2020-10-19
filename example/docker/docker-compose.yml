@@ -3,9 +3,12 @@ services:
 
   guacd:
     container_name: guacd
-    image: guacamole/guacd
+    image: guacamole/guacd:1.2.0
     networks:
       - guacamole
+
+    environment:
+      GUACD_LOG_LEVEL: debug
     volumes:
       - /etc/localtime:/etc/localtime:ro
 
@@ -22,7 +25,6 @@ services:
       SHUTDOWN_DELAY: 30
       IDLE_TIME: 15
       DISCONECT_TIME: 30
-      GUACD_LOG_LEVEL: debug
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z

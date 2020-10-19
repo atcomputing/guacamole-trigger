@@ -3,7 +3,7 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
 
     var idleServices             = $injector.get('idleService');
     var guacClientManager        = $injector.get('guacClientManager');
-    var idleConfigREST        = $injector.get('idleConfigREST');
+    var idleConfigREST           = $injector.get('idleConfigREST');
 
     $scope.messages = "test2 een twee drie ";
     $scope.idle = false;
@@ -13,10 +13,8 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
         idleServices.idleCallback(config.idleTime * 1000,
             function (){
                 $scope.idle = true;
-                $scope.$apply();
             },function (){
                 $scope.idle=false
-                $scope.$apply();
             });
 
             idleServices.idleCallback(config.disconectTime* 1000 ,disconnect);
@@ -24,8 +22,8 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
     idleConfigREST.getConfig().then(setTimers);
 
     function disconnect () {
-        console.log("disconnect")
-        guacClientManager.clear()
+        console.log("disconnect");
+        guacClientManager.clear(); // this wont work because, guacd will  try to reconnect so disconnect event is never trigger in guacamole
         $scope.idle = false;
     }
 }]);
