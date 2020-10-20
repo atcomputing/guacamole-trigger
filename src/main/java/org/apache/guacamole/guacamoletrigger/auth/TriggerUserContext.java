@@ -35,6 +35,18 @@ public class TriggerUserContext extends AbstractUserContext {
     public static final String ROOT_IDENTIFIER = DEFAULT_ROOT_CONNECTION_GROUP;
 
 
+    // We cant acces specifi usercontext from tunnelevent "org/apache/guacamole/guacamoletrigger/event/GuacamoleTrigger.java"
+    // So we make registerConnection/deregisterConnection static functions. that modify static map from user to tunnel data
+    // normal member functions, have use this map to get only tunnel data for there user.
+
+    // The Tunnel data that we use is list of most recent (tunnelId, Host)
+    // The webfront does not know when it creates a connection to which host it is.
+    // it can use TriggerREST query Host status via tunnelID
+    // That is why we need to konw mapping tunnelID Host
+    // We need most recent, because if the connection fails (which happens if for example host is Down), a new connection/tunnelId is created
+    // But webfrontend still querys via old stunnelID for a while.
+    // if you store most recent you can still answer those querys for old tunnelID's
+
     private static ConcurrentMap<String,TunnelBuffer> user2TunnelBuffer = new ConcurrentHashMap<String,TunnelBuffer>();
 
     /**
@@ -85,6 +97,11 @@ public class TriggerUserContext extends AbstractUserContext {
 
         // Set the authProvider to the calling authProvider object.
         this.authProvider = authProvider;
+
+        // stores for this user the 10 most recent (tunnelID,host)
+        // my guess is that, you can start 5 connection in guacamole at same time before you get errors.
+        // but it depends how much time the startup takes
+        // TODO test, and make bigger if needed
         user2TunnelBuffer.put(username,new TunnelBuffer(10));
     }
     protected void finalize(){
@@ -93,7 +110,6 @@ public class TriggerUserContext extends AbstractUserContext {
 
     }
 
-
     public static void registerConnection (AuthenticatedUser authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         String tunnelID = tunnel.getUUID().toString();
@@ -101,7 +117,10 @@ public class TriggerUserContext extends AbstractUserContext {
         Host registeredHost = tunnelBuffer.get(tunnelID);
         if (registeredHost == null){
           registeredHost =  Host.getHost(authUser,tunnel);
-          registeredHost.start(authUser); // TODO only when not running?
+          // TODO it only start new Host. but if excising host is stopped manual.
+          //      it will only will restart that host. if the number of failed connection attempts has flushed the tunnelbuffer
+          //      Also this one cancel scheduled stop actions
+          registeredHost.start(authUser);
           tunnelBuffer.push(tunnelID, registeredHost);
         }
     }
@@ -110,8 +129,15 @@ public class TriggerUserContext extends AbstractUserContext {
         Host registeredHost = Host.findHost(tunnel);
 
         if (registeredHost != null) {
-            registeredHost.removeConnection(tunnel); // TODO tunnelid
-            if (registeredHost.openConnections() <= 0 ){ // TODO do this in Host?
+            registeredHost.removeConnection(tunnel);
+            if (registeredHost.openConnections() <= 0 ){
+
+                // stop is scheduled instead of run immediately. to prevent the situation where:
+                // If a connection fails, and it is the only connection to a host.
+                // the connection count becomes 0, a stop command is run. guacamole succeeds in reconnecting.
+                // but you still lose connection, because you have turned off you host
+
+                // but if you schedule your Stop in near feature. you can cancel that if you reconnect.
                 registeredHost.scheduleStop();
             }
         } else {

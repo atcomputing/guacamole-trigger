@@ -27,14 +27,13 @@ import org.apache.guacamole.protocol.GuacamoleConfiguration;
 public class Host  {
 
 
-    // TODO this more information, then we use. we only need to know if its is booting, or stopping
+    // TODO TERMINATED is not used, and UNKNOW,and RUNNING are factional equivalent, besides log messages
     // and we can query that by checking if there is thread running for that.
     enum hostStatus {
         UNKNOW,
         BOOTING,
         RUNNING,
         TERMINATED,
-        // FAILTOBOOT
     };
 
     private Console console = new Console (
@@ -106,14 +105,20 @@ public class Host  {
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
         connections++;
-        System.out.printf("connect: %s #%d\n", tunnel.getUUID().toString(), +  connections);
+        // cancel shutdown. or make cancel shutdown a sepearte method
+        logger.info("connection: {} added. now there are {} conectoins to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
     }
 
     public void removeConnection(GuacamoleTunnel tunnel) {
 
-
         connections--;
-        System.out.printf("disconnect: %s #%d\n", tunnel.getUUID().toString(), +  connections);
+        if (connections < 0) {
+
+            logger.error("connection count for {} reached {}",  this.hostname, connections);
+            connections = 0;
+        }
+
+        logger.info("connection: {} removed. now there are {} conectoins to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
     }
 
     public String getHostname (){
@@ -142,6 +147,10 @@ public class Host  {
         }
         return reachable;
     }
+    /**
+     * schedule a stop command for this Host in GuacamoleTriggerProperties.SHUTDOWN_DELAY seconds
+     */
+
     public void scheduleStop() throws GuacamoleException {
 
         String command = settings.getProperty(GuacamoleTriggerProperties.STOP_COMMAND);
@@ -154,23 +163,32 @@ public class Host  {
 
         Map<String,String> commandEnvironment = socketConfig.getParameters();
 
-            if (shutdown == null){
+        // TODO set shutdown null aftet shutdown, or allow shutdown to run twice
+        // Now if you run sceduledStop, Set "shutown". And then manual start the host. shutown is still set so shutdown won't run again
 
-                shutdown = Executors.newScheduledThreadPool(1).schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        logger.info("cmd: {}, status:{}", command,status.name());
-                        int exitCode = console.run(command ,commandEnvironment);
-                        if (exitCode == 0){
-                            status = hostStatus.TERMINATED;
-                        } else {
-                            status = hostStatus.UNKNOW;
-                        }
+        if (shutdown == null){
+
+
+            logger.info("schedule stop command for host {}", this.hostname);
+
+            hostname = this.hostname;
+
+            shutdown = Executors.newScheduledThreadPool(1).schedule(new Runnable() {
+                @Override
+                public void run() {
+                    logger.info("cmd: {}, status:{}", command,status.name());
+                    int exitCode = console.run(command ,commandEnvironment);
+                    if (exitCode == 0){
+                        status = hostStatus.TERMINATED;
+                    } else {
+                        status = hostStatus.UNKNOW;
+                        logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
                     }
-                }, shutdownDelay, TimeUnit.SECONDS);
-            }
-            // TODO can terminated host be removed from hosts?
-            // and what if there is no shutdown
+
+                    // TODO can terminated host be removed from hosts?
+                }
+            }, shutdownDelay, TimeUnit.SECONDS);
+        }
     }
 
     public int openConnections() {
@@ -180,9 +198,11 @@ public class Host  {
 
     public void start (AuthenticatedUser authUser) throws GuacamoleException{
 
+        // TODO
         if (shutdown != null) {
             shutdown.cancel(false);
             shutdown = null;
+            logger.info("canceld schedule stop command for host {}", this.hostname);
         }
 
         String command = settings.getProperty(GuacamoleTriggerProperties.START_COMMAND);
@@ -210,16 +230,19 @@ public class Host  {
                 // TODO maybe there exist a better place to do this for example in console(limit number of running jobs)
                 // or in handle event?
 
+                hostname = this.hostname;
+
                 Executors.newSingleThreadExecutor().execute(new Runnable() {
                     @Override
                     public void run() {
 
-                        logger.info("cmd: {}, status:{}", command,status.name());
+                        logger.info("{}@{} {}: {}", guacamoleUsername,hostname, status.name(), command);
                         int exitCode = console.run(command ,commandEnvironment);
                         if (exitCode == 0){
                             status = hostStatus.RUNNING;
                         } else {
                             status = hostStatus.UNKNOW;
+                            logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
                         }
                     }
                 });

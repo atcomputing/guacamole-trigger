@@ -27,12 +27,15 @@ public class TriggerREST {
     }
 
 
+    // these setting might become connection specific instead of global
     @GET
     @Path("config")
     public Map<String, Integer> getConfig() throws GuacamoleException {
 
         Environment settings= new LocalEnvironment();
         Map<String,Integer> anser = new HashMap<String,Integer>();
+
+        // TODO better place to set defaults
         anser.put("disconectTime",settings.getProperty(GuacamoleTriggerProperties.DISCONECT_TIME, 3600));
         anser.put("idleTime",settings.getProperty(GuacamoleTriggerProperties.IDLE_TIME, 1800));
         return anser;
