@@ -1,0 +1,10 @@
+.console {
+    white-space:pre;
+    background-color:#1c1c1c;
+    color: lightgrey;
+    font-family: monospace;
+    height: 400px;
+    overflow-y: auto;
+    padding:8p;
+    margin:0px;
+}

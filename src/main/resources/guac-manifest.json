@@ -13,6 +13,7 @@
     ],
     "js" : [
         "triggerModule.js",
+        "directives/console.js",
         "controllers/hostController.js",
         "controllers/idleController.js",
         "services/hostREST.js",
@@ -20,7 +21,8 @@
         "services/idleService.js"
     ],
     "css" : [
-        "styles/idle-warning.css"
+        "styles/idle-warning.css",
+        "styles/console.css"
     ],
     "html" : [
         "templates/notificationWrapper.html",
