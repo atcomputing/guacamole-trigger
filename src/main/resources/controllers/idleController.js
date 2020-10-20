@@ -5,7 +5,9 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
     var guacClientManager        = $injector.get('guacClientManager');
     var idleConfigREST           = $injector.get('idleConfigREST');
 
-    $scope.messages = "test2 een twee drie ";
+    // TODO countdown
+    // TODO translate
+    $scope.messages = "host will disconnect if idle";
     $scope.idle = false;
 
 
