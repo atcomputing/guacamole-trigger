@@ -15,13 +15,12 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
 
 
         // there is already loggig that when connect there are no notifications
-        if ( $scope.host.status === "BOOTING"  || ["WAITING","CLIENT_ERROR"].includes($scope.client.clientState.connectionState)){
+        if ( $scope.host.status === "BOOTING"  || ! $scope.client || ["WAITING","CLIENT_ERROR"].includes($scope.client.clientState.connectionState)){
             startPollingHost();
         } else {
             stopPollingHost();
         }
-        if (! $scope.client.tunnel.uuid) {
-            console.log("fail")
+        if (! $scope.client|| ! $scope.client.tunnel || !$scope.client.tunnel.uuid) {
             return
         }
         hostREST.getHost($scope.client.tunnel.uuid).then(
@@ -29,9 +28,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
 
                 if (host){
                     $scope.host = host
-                    // TODO scroll bottum if was scrolled to bottum https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
                 }
-                console.log("connection2: " +  $scope.host.status);
                 $scope.showBootNotification = ($scope.host.status === "BOOTING")
 
             },
