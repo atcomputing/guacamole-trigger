@@ -1,9 +1,9 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
-import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +29,7 @@ public class Host  {
 
     // TODO TERMINATED is not used, and UNKNOW,and RUNNING are factional equivalent, besides log messages
     // and we can query that by checking if there is thread running for that.
-    enum hostStatus {
+    public enum hostStatus {
         UNKNOW,
         BOOTING,
         RUNNING,
@@ -96,7 +96,6 @@ public class Host  {
 
             this.socketConfig = socketConfig;
             this.hostname = socketConfig.getParameter("hostname");
-            // This is for the future, to be able to check howmany connection use this host. and if it can be truned off.
 
             hosts.put(hostname,this);
             addConnection(user,tunnel);
@@ -110,7 +109,7 @@ public class Host  {
 
         connections++;
         // cancel shutdown. or make cancel shutdown a sepearte method
-        logger.info("connection: {} added. now there are {} conectoins to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
+        logger.info("connection: {} added. now there are {} conections to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
     }
 
     public void removeConnection(GuacamoleTunnel tunnel) {
@@ -122,7 +121,7 @@ public class Host  {
             connections = 0;
         }
 
-        logger.info("connection: {} removed. now there are {} conectoins to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
+        logger.info("connection: {} removed. now there are {} conections to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
     }
 
     public String getHostname (){
@@ -140,19 +139,10 @@ public class Host  {
         }
     }
 
-    public boolean ping() {
-
-        boolean reachable = false;
-        try{
-            reachable = InetAddress.getByName(this.hostname).isReachable(100);
-        } catch (Exception e){
-
-            logger.info("could not ping {}", this.hostname);
-        }
-        return reachable;
-    }
     /**
      * schedule a stop command for this Host in GuacamoleTriggerProperties.SHUTDOWN_DELAY seconds
+     *
+     * if a second stop command is scheduled while the first still has not finished, the second will be ignored
      */
 
     public void scheduleStop() throws GuacamoleException {
@@ -167,34 +157,74 @@ public class Host  {
 
         Map<String,String> commandEnvironment = socketConfig.getParameters();
 
-        if (shutdown == null){
-
-
-            logger.info("schedule stop command for host {}", this.hostname);
-
-            hostname = this.hostname;
-
-            shutdown = Executors.newScheduledThreadPool(1).schedule(new Runnable() {
-                @Override
-                public void run() {
-                    logger.info("cmd: {}, status:{}", command,status.name());
-                    int exitCode = console.run(command ,commandEnvironment);
-                    if (exitCode == 0){
-                        status = hostStatus.TERMINATED;
-                    } else {
-                        status = hostStatus.UNKNOW;
-                        logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
-                    }
-
-                   shutdown=null;
-
-                    // TODO can terminated host be removed from hosts?
-                }
-            }, shutdownDelay, TimeUnit.SECONDS);
+        // if shutdown is already scheduled, don't schedule another one
+        if (shutdown != null){
+            return;
         }
+
+        logger.info("schedule stop command for host {}", this.hostname);
+
+        shutdown = Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
+            @Override
+            public void run() {
+
+
+                logger.info("cmd: {}, status:{}", command,status.name());
+
+                if (status == hostStatus.BOOTING) {
+
+                    logger.error("Host stop command is run while host is still booting");
+                }
+
+                int exitCode = console.run(command ,commandEnvironment);
+                if (exitCode == 0){
+                    status = hostStatus.TERMINATED;
+                } else {
+                    status = hostStatus.UNKNOW;
+                    logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
+                }
+
+                shutdown=null;
+
+                // TODO can terminated host be removed from hosts?
+            }
+        }, shutdownDelay, TimeUnit.SECONDS);
     }
 
-    public void start (AuthenticatedUser authUser) throws GuacamoleException{
+    /**
+     * lazyStart will try to start Host if (not already booting) (tunnel is not open for a while)
+     */
+    public void lazyStart   (GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
+
+        if (status != hostStatus.BOOTING){
+            status = hostStatus.BOOTING;
+
+            // connection starts open. but will get closed eventually if Host can't be reached
+            // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
+
+            int startUpDellay = 2000;
+
+            // if Tunnel is already closed, try to start host direct
+            if (!tunnel.isOpen()) {
+                startUpDellay = 0;
+            }
+
+            shutdown = Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // host still is unreachable start it
+                        if (! tunnel.isOpen()){
+                            start(authUser);
+                        }else {
+                            // host was reachable
+                            status = hostStatus.RUNNING;
+                        }
+                    }
+                }, startUpDellay, TimeUnit.MILLISECONDS);
+        }
+    }
+    public void start (AuthenticatedUser authUser) {
 
         if (shutdown != null) {
             shutdown.cancel(false);
@@ -202,48 +232,28 @@ public class Host  {
             logger.info("canceld schedule stop command for host {}", this.hostname);
         }
 
-        String command = settings.getProperty(GuacamoleTriggerProperties.START_COMMAND);
-        if (command == null){ ;
-
+        String command = "";
+        try{
+            command = settings.getProperty(GuacamoleTriggerProperties.START_COMMAND);
+        } catch (GuacamoleException e) {
             logger.info("no start command provide. skip starting: {}", this.hostname);
             return;
         }
 
-        // TODO test for ping is not generic solution, maybe should includ in command or make optional
+        String guacamoleUsername = authUser.getCredentials().getUsername();
+        Map<String,String> commandEnvironment = socketConfig.getParameters();
+        commandEnvironment.put("guacamoleUsername", guacamoleUsername);
 
-        if (! ping()){
+        status = hostStatus.BOOTING;
+        console.clear();
 
-            String guacamoleUsername = authUser.getCredentials().getUsername();
-            Map<String,String> commandEnvironment = socketConfig.getParameters();
-            commandEnvironment.put("guacamoleUsername", guacamoleUsername);
-
-            if (status != hostStatus.BOOTING){
-
-                status = hostStatus.BOOTING;
-                console.clear();
-
-                // Need to run in background. otherswise connection visable after start has completed
-                // but we want to track connection in webinterface
-                // TODO maybe there exist a better place to do this for example in console(limit number of running jobs)
-                // or in handle event?
-
-                hostname = this.hostname;
-
-                Executors.newSingleThreadExecutor().execute(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        logger.info("{}@{} {}: {}", guacamoleUsername,hostname, status.name(), command);
-                        int exitCode = console.run(command ,commandEnvironment);
-                        if (exitCode == 0){
-                            status = hostStatus.RUNNING;
-                        } else {
-                            status = hostStatus.UNKNOW;
-                            logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
-                        }
-                    }
-                });
-            }
+        logger.info("{}@{} {}: {}", guacamoleUsername,this.hostname, status.name(), command);
+        int exitCode = console.run(command ,commandEnvironment);
+        if (exitCode == 0){
+            status = hostStatus.RUNNING;
+        } else {
+            status = hostStatus.UNKNOW;
+            logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
         }
     }
 }

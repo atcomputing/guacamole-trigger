@@ -117,8 +117,11 @@ public class TriggerUserContext extends AbstractUserContext {
         }
         Host registeredHost =  Host.getHost(authUser,tunnel);
 
+        // from this point onward webclient can query host status.
+        tunnelBuffer.push(tunnelID, registeredHost);
+
         // start also cancels sceduled stop command
-        registeredHost.start(authUser);
+        registeredHost.lazyStart(tunnel,authUser);
         tunnelBuffer.push(tunnelID, registeredHost);
     }
 
@@ -134,7 +137,9 @@ public class TriggerUserContext extends AbstractUserContext {
                 // the connection count becomes 0, a stop command is run. guacamole succeeds in reconnecting.
                 // but you still lose connection, because you have turned off you host
 
-                // but if you schedule your Stop in near feature. you can cancel that if you reconnect.
+                // But if you schedule your Stop in near feature. you can cancel that if you reconnect.
+                // This also means if you can't boot and connect in the time (GuacamoleTriggerProperties.SHUTDOWN_DELAY)
+                // Then stopcomand will be run immediately after startup command
                 registeredHost.scheduleStop();
             }
         } else {
