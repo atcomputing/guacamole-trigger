@@ -17,7 +17,6 @@ services:
     build: ./guacamole
     environment:
       GUACD_HOSTNAME: guacd
-      #BASIC_USER_MAPPING: /etc/guacamole/user-mapping.xml
       GUACAMOLE_HOME: /etc/guacamole
       ENABLE_WEBSOCKET: "true"
       START_COMMAND: "timeout -s 9 15 docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"

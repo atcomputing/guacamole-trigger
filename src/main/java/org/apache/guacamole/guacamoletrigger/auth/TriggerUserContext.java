@@ -35,7 +35,7 @@ public class TriggerUserContext extends AbstractUserContext {
     public static final String ROOT_IDENTIFIER = DEFAULT_ROOT_CONNECTION_GROUP;
 
 
-    // We cant acces specifi usercontext from tunnelevent "org/apache/guacamole/guacamoletrigger/event/GuacamoleTrigger.java"
+    // We can`t acces specific usercontext from tunnelevent "org/apache/guacamole/guacamoletrigger/event/GuacamoleTrigger.java"
     // So we make registerConnection/deregisterConnection static functions. that modify static map from user to tunnel data
     // normal member functions, have use this map to get only tunnel data for there user.
 
@@ -43,9 +43,8 @@ public class TriggerUserContext extends AbstractUserContext {
     // The webfront does not know when it creates a connection to which host it is.
     // it can use TriggerREST query Host status via tunnelID
     // That is why we need to konw mapping tunnelID Host
-    // We need most recent, because if the connection fails (which happens if for example host is Down), a new connection/tunnelId is created
-    // But webfrontend still querys via old stunnelID for a while.
-    // if you store most recent you can still answer those querys for old tunnelID's
+    // We need most recent, because multiple connections can be queried same time
+    // if you store most recent you can answer those query's for at least for new connection (host that start up)
 
     private static ConcurrentMap<String,TunnelBuffer> user2TunnelBuffer = new ConcurrentHashMap<String,TunnelBuffer>();
 
@@ -99,9 +98,7 @@ public class TriggerUserContext extends AbstractUserContext {
         this.authProvider = authProvider;
 
         // stores for this user the 10 most recent (tunnelID,host)
-        // my guess is that, you can start 5 connection in guacamole at same time before you get errors.
-        // but it depends how much time the startup takes
-        // TODO test, and make bigger if needed
+        // This means you can start 10 connection per user,at the same time where you still get correct boot messags
         user2TunnelBuffer.put(username,new TunnelBuffer(10));
     }
     protected void finalize(){
@@ -114,15 +111,15 @@ public class TriggerUserContext extends AbstractUserContext {
 
         String tunnelID = tunnel.getUUID().toString();
         TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(authUser.getCredentials().getUsername());
-        Host registeredHost = tunnelBuffer.get(tunnelID);
-        if (registeredHost == null){
-          registeredHost =  Host.getHost(authUser,tunnel);
-          // TODO it only start new Host. but if excising host is stopped manual.
-          //      it will only will restart that host. if the number of failed connection attempts has flushed the tunnelbuffer
-          //      Also this one cancel scheduled stop actions
-          registeredHost.start(authUser);
-          tunnelBuffer.push(tunnelID, registeredHost);
+
+        if (tunnelBuffer.get(tunnelID)!= null){
+            logger.error("tunnelID {} is registerd more then once" , tunnelID );
         }
+        Host registeredHost =  Host.getHost(authUser,tunnel);
+
+        // start also cancels sceduled stop command
+        registeredHost.start(authUser);
+        tunnelBuffer.push(tunnelID, registeredHost);
     }
 
     public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {

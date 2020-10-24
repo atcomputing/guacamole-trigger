@@ -198,7 +198,6 @@ public class Host  {
 
     public void start (AuthenticatedUser authUser) throws GuacamoleException{
 
-        // TODO
         if (shutdown != null) {
             shutdown.cancel(false);
             shutdown = null;
