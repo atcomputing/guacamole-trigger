@@ -102,6 +102,10 @@ public class Host  {
             addConnection(user,tunnel);
     }
 
+    public int openConnections() {
+        return connections;
+    }
+
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
         connections++;
@@ -163,9 +167,6 @@ public class Host  {
 
         Map<String,String> commandEnvironment = socketConfig.getParameters();
 
-        // TODO set shutdown null aftet shutdown, or allow shutdown to run twice
-        // Now if you run sceduledStop, Set "shutown". And then manual start the host. shutown is still set so shutdown won't run again
-
         if (shutdown == null){
 
 
@@ -185,15 +186,12 @@ public class Host  {
                         logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
                     }
 
+                   shutdown=null;
+
                     // TODO can terminated host be removed from hosts?
                 }
             }, shutdownDelay, TimeUnit.SECONDS);
         }
-    }
-
-    public int openConnections() {
-        return connections;
-        // return tunnels.size();
     }
 
     public void start (AuthenticatedUser authUser) throws GuacamoleException{
