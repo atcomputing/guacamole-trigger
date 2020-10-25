@@ -1,28 +1,26 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
+import java.util.concurrent.ScheduledFuture;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import java.util.concurrent.ScheduledFuture;
+import org.apache.guacamole.GuacamoleException;
+import org.apache.guacamole.GuacamoleUnsupportedException;
+import org.apache.guacamole.net.GuacamoleSocket;
+import org.apache.guacamole.net.GuacamoleTunnel;
+import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
+import org.apache.guacamole.protocol.GuacamoleConfiguration;
 
-import org.apache.guacamole.environment.Environment;
-import org.apache.guacamole.environment.LocalEnvironment;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.guacamole.GuacamoleException;
-import org.apache.guacamole.GuacamoleUnsupportedException;
 import org.apache.guacamole.guacamoletrigger.auth.Console;
-import org.apache.guacamole.net.GuacamoleSocket;
-import org.apache.guacamole.net.GuacamoleTunnel;
-import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
-import org.apache.guacamole.protocol.GuacamoleConfiguration;
 
 public class Host  {
 
@@ -36,16 +34,19 @@ public class Host  {
         TERMINATED,
     };
 
+    private static ConfigurationService settings = new ConfigurationService();
+
     private Console console = new Console (
                     line -> logger.debug("stdout: {}", line),
-                    line -> logger.info("stderr: {}", line)
+                    line -> logger.info("stderr: {}", line),
+                    settings.getGuacamoleHome(),
+                    settings.getCommandTimeout()
                 );
 
     private ScheduledFuture<?> shutdown;
     private hostStatus status = hostStatus.UNKNOW;
     private String hostname;
     private int connections = 0; //TODO race condition
-    private static Environment settings;
     private static final Logger logger = LoggerFactory.getLogger(Host.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
@@ -73,7 +74,6 @@ public class Host  {
 
         Host host = findHost( socketConfig.getParameter("hostname"));
         if (host == null) {
-            settings = new LocalEnvironment(); // TODO do we have to reinitalise static variable
             host = new Host(authUser,tunnel, socketConfig);
 
         } else {
@@ -139,8 +139,8 @@ public class Host  {
 
     public void scheduleStop() throws GuacamoleException {
 
-        String command = settings.getProperty(GuacamoleTriggerProperties.STOP_COMMAND);
-        Integer shutdownDelay = settings.getProperty(GuacamoleTriggerProperties.SHUTDOWN_DELAY, 300);
+        String command = settings.getStopCommand();
+        Integer shutdownDelay = settings.getShutdownDelay();
         if (command == null){ ;
 
             logger.info("no stop command provide. dont schedule stopping: {}", this.hostname);
@@ -232,7 +232,7 @@ public class Host  {
 
         String command = "";
         try{
-            command = settings.getProperty(GuacamoleTriggerProperties.START_COMMAND);
+            command = settings.getStartCommand();
         } catch (GuacamoleException e) {
             logger.info("no start command provide. skip starting: {}", this.hostname);
             return;

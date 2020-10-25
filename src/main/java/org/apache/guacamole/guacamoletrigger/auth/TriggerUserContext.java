@@ -4,6 +4,13 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.guacamole.GuacamoleException;
+import org.apache.guacamole.GuacamoleUnsupportedException;
+import org.apache.guacamole.net.GuacamoleSocket;
+import org.apache.guacamole.net.GuacamoleTunnel;
+import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
+import org.apache.guacamole.protocol.GuacamoleConfiguration;
+
 import org.apache.guacamole.net.auth.AbstractUserContext;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
 import org.apache.guacamole.net.auth.AuthenticationProvider;
@@ -18,16 +25,8 @@ import org.apache.guacamole.net.auth.simple.SimpleUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.guacamole.GuacamoleException;
-
-import org.apache.guacamole.GuacamoleUnsupportedException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
 import org.apache.guacamole.guacamoletrigger.auth.TriggerREST;
-import org.apache.guacamole.net.GuacamoleTunnel;
-
-import org.apache.guacamole.net.GuacamoleSocket;
-import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
-import org.apache.guacamole.protocol.GuacamoleConfiguration;
 
 public class TriggerUserContext extends AbstractUserContext {
 
@@ -109,7 +108,7 @@ public class TriggerUserContext extends AbstractUserContext {
     }
     protected void finalize(){
 
-        // TODO not the cleanest sollution, I it might be that guacamole keeps userContext. in case this function is never called.
+        // not the cleanest sollution, guacamole keeps userContext around.so this might never be called.
 
         // remove tunnel data from static map because we no longer need it, and this way it can be garbaged collected
         user2TunnelBuffer.put(self.getIdentifier(),null);

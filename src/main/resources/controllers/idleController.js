@@ -12,14 +12,18 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
 
 
     function setTimers(config){
+        if (config.idleTime !== 0 && config.disconnectTime !== 0){
         idleServices.idleCallback(config.idleTime * 1000,
             function (){
                 $scope.idle = true;
             },function (){
                 $scope.idle=false
             });
+        }
 
-            idleServices.idleCallback(config.disconectTime* 1000 ,disconnect);
+        if (config.disconnectTime !== 0){
+            idleServices.idleCallback(config.disconnectTime* 1000 ,disconnect);
+        }
     }
     idleConfigREST.getConfig().then(setTimers);
 

@@ -32,12 +32,11 @@ public class TriggerREST {
     @Path("config")
     public Map<String, Integer> getConfig() throws GuacamoleException {
 
-        Environment settings= new LocalEnvironment();
+        ConfigurationService settings= new ConfigurationService();
         Map<String,Integer> anser = new HashMap<String,Integer>();
 
-        // TODO better place to set defaults
-        anser.put("disconectTime",settings.getProperty(GuacamoleTriggerProperties.DISCONECT_TIME, 3600));
-        anser.put("idleTime",settings.getProperty(GuacamoleTriggerProperties.IDLE_TIME, 1800));
+        anser.put("disconnectTime",settings.getDisconnectTime());
+        anser.put("idleTime",settings.getIdleTime());
         return anser;
     }
 
