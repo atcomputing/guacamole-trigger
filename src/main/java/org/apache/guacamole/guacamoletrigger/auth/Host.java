@@ -196,6 +196,12 @@ public class Host  {
      */
     public void lazyStart   (GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
 
+
+        if (shutdown != null) {
+            shutdown.cancel(false);
+            shutdown = null;
+            logger.info("canceld schedule stop command for host {}", this.hostname);
+        }
         if (status != hostStatus.BOOTING){
             status = hostStatus.BOOTING;
 
@@ -209,7 +215,7 @@ public class Host  {
                 startUpDellay = 0;
             }
 
-            shutdown = Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
+            Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
                     @Override
                     public void run() {
 
