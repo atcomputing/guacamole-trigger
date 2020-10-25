@@ -55,16 +55,7 @@ public class Host  {
     private GuacamoleConfiguration socketConfig;
 
 
-    public static Host findHost (GuacamoleTunnel tunnel)throws GuacamoleUnsupportedException{
-
-        GuacamoleSocket socket = tunnel.getSocket();
-        if(!(socket instanceof ConfiguredGuacamoleSocket)){
-
-            throw new GuacamoleUnsupportedException("can't handle unconfigerd sockets");
-        }
-
-        GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
-        String hostname = socketConfig.getParameter("hostname");
+    public static Host findHost (String hostname) {
 
         return hosts.get(hostname);
     }
@@ -79,7 +70,8 @@ public class Host  {
         }
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
-        Host host = findHost(tunnel);
+
+        Host host = findHost( socketConfig.getParameter("hostname"));
         if (host == null) {
             settings = new LocalEnvironment(); // TODO do we have to reinitalise static variable
             host = new Host(authUser,tunnel, socketConfig);
@@ -186,7 +178,7 @@ public class Host  {
 
                 shutdown=null;
 
-                // TODO can terminated host be removed from hosts?
+                hosts.remove(hostname);
             }
         }, shutdownDelay, TimeUnit.SECONDS);
     }

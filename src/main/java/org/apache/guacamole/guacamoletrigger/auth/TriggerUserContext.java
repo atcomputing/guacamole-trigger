@@ -19,9 +19,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.guacamole.GuacamoleException;
+
+import org.apache.guacamole.GuacamoleUnsupportedException;
 import org.apache.guacamole.guacamoletrigger.auth.Host;
 import org.apache.guacamole.guacamoletrigger.auth.TriggerREST;
 import org.apache.guacamole.net.GuacamoleTunnel;
+
+import org.apache.guacamole.net.GuacamoleSocket;
+import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
+import org.apache.guacamole.protocol.GuacamoleConfiguration;
 
 public class TriggerUserContext extends AbstractUserContext {
 
@@ -103,6 +109,9 @@ public class TriggerUserContext extends AbstractUserContext {
     }
     protected void finalize(){
 
+        // TODO not the cleanest sollution, I it might be that guacamole keeps userContext. in case this function is never called.
+
+        // remove tunnel data from static map because we no longer need it, and this way it can be garbaged collected
         user2TunnelBuffer.put(self.getIdentifier(),null);
 
     }
@@ -126,7 +135,16 @@ public class TriggerUserContext extends AbstractUserContext {
     }
 
     public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {
-        Host registeredHost = Host.findHost(tunnel);
+
+        GuacamoleSocket socket = tunnel.getSocket();
+        if(!(socket instanceof ConfiguredGuacamoleSocket)){
+
+            throw new GuacamoleUnsupportedException("can't handle unconfigerd sockets");
+        }
+
+        GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
+
+        Host registeredHost = Host.findHost(socketConfig.getParameter("hostname"));
 
         if (registeredHost != null) {
             registeredHost.removeConnection(tunnel);

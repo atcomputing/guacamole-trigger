@@ -1,7 +1,5 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
-// TODO store HostName instead of Host so Host can be garbage collected
-
 /**
  * Circular buffer for most recent (tunnelid,Host)
  */
@@ -15,7 +13,7 @@ public class TunnelBuffer {
     }
 
     public void push (String tunnelID, Host host){
-        tunnel2Hosts[index] = new Tunnel2Host(tunnelID,host) ;
+        tunnel2Hosts[index] = new Tunnel2Host(tunnelID,host.getHostname()) ;
         this.index = ++index % tunnel2Hosts.length;
     }
     /**
@@ -25,7 +23,7 @@ public class TunnelBuffer {
     public Host get(String tunnelID) {
         for (Tunnel2Host t2h: tunnel2Hosts ){
             if (t2h != null && t2h.tunnelID.equals(tunnelID)) {
-                return t2h.host;
+                return Host.findHost(t2h.host);
             }
         }
         return null;
@@ -40,9 +38,9 @@ class Tunnel2Host {
 
   public final String tunnelID;
 
-  public final Host host;
+  public final String host;
 
-  Tunnel2Host(String tunnelID, Host host) {
+  Tunnel2Host(String tunnelID, String host) {
     this.tunnelID = tunnelID;
     this.host = host;
   }
