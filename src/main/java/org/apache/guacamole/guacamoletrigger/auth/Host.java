@@ -3,6 +3,7 @@ package org.apache.guacamole.guacamoletrigger.auth;
 import java.util.concurrent.ScheduledFuture;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -51,10 +52,6 @@ public class Host  {
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
 
-    // this is used for createing environment variable for starting en stoping command
-    // TODO do we need all of this? there can be more then 1 config for a host. mybe only use hostname
-    private GuacamoleConfiguration socketConfig;
-
 
     public static Host findHost (String hostname) {
 
@@ -72,9 +69,10 @@ public class Host  {
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
 
-        Host host = findHost( socketConfig.getParameter("hostname"));
+        String hostname =  socketConfig.getParameter("hostname");
+        Host host = findHost(hostname);
         if (host == null) {
-            host = new Host(authUser,tunnel, socketConfig);
+            host = new Host(authUser, tunnel, hostname);
 
         } else {
 
@@ -84,10 +82,9 @@ public class Host  {
         return host;
 
     }
-    private Host(AuthenticatedUser user,GuacamoleTunnel tunnel,GuacamoleConfiguration socketConfig) throws GuacamoleUnsupportedException, GuacamoleException {
+    private Host(AuthenticatedUser user,GuacamoleTunnel tunnel,String hostname ) throws GuacamoleUnsupportedException, GuacamoleException {
 
-            this.socketConfig = socketConfig;
-            this.hostname = socketConfig.getParameter("hostname");
+            this.hostname = hostname;
 
             hosts.put(hostname,this);
             addConnection(user,tunnel);
@@ -147,12 +144,13 @@ public class Host  {
             return;
         }
 
-        Map<String,String> commandEnvironment = socketConfig.getParameters();
-
         // if shutdown is already scheduled, don't schedule another one
         if (shutdown != null){
             return;
         }
+
+        Map<String,String> commandEnvironment = new HashMap<String,String>();
+        commandEnvironment.put("hostname", hostname);
 
         logger.info("schedule stop command for host {}", this.hostname);
 
@@ -239,7 +237,9 @@ public class Host  {
         }
 
         String guacamoleUsername = authUser.getCredentials().getUsername();
-        Map<String,String> commandEnvironment = socketConfig.getParameters();
+
+        Map<String,String> commandEnvironment = new HashMap<String,String>();
+        commandEnvironment.put("hostname", hostname);
         commandEnvironment.put("guacamoleUsername", guacamoleUsername);
 
         status = hostStatus.BOOTING;

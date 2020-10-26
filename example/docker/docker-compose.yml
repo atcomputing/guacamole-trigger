@@ -22,8 +22,9 @@ services:
       START_COMMAND: "timeout -s 9 15 docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
       STOP_COMMAND: "docker stop -t 120  $$hostname"
       SHUTDOWN_DELAY: 30
+      COMMAND_TIMEOUT: 30
       IDLE_TIME: 15
-      DISCONECT_TIME: 30
+      DISCONNECT_TIME: 30
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z
