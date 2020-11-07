@@ -157,7 +157,7 @@ public class TriggerUserContext extends AbstractUserContext {
                 // But if you schedule your Stop in near feature. you can cancel that if you try to reconnect.
                 // This also means if you can't boot and connect in the time (GuacamoleTriggerProperties.SHUTDOWN_DELAY)
                 // Then stopcomand will be run immediately after startup command
-                registeredHost.scheduleStop();
+                registeredHost.scheduleStop(user);
             }
         } else {
             String tunnelID = tunnel.getUUID().toString();

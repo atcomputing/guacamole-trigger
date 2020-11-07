@@ -135,8 +135,7 @@ public class Host  {
      *
      * if a second stop command is scheduled while the first still has not finished, the second will be ignored
      */
-    // TODO add way to get guacamoleUsername for stop
-    public void scheduleStop() throws GuacamoleException {
+    public void scheduleStop(AuthenticatedUser authUser) throws GuacamoleException {
 
         Integer shutdownDelay = settings.getShutdownDelay();
 
@@ -151,13 +150,13 @@ public class Host  {
             @Override
             public void run() {
 
-                stop();
+                stop(authUser);
 
             }
         }, shutdownDelay, TimeUnit.SECONDS);
     }
 
-    private void stop(){
+    private void stop(AuthenticatedUser authUser) {
         String command = "";
         try{
             command = settings.getStopCommand();
@@ -166,7 +165,10 @@ public class Host  {
             return;
         }
 
+        String guacamoleUsername = authUser.getCredentials().getUsername();
+
         Map<String,String> commandEnvironment = new HashMap<String,String>();
+        commandEnvironment.put("guacamoleUsername", guacamoleUsername);
         commandEnvironment.put("hostname", hostname);
 
         logger.info("{}> {}", this.hostname, command);
@@ -193,7 +195,7 @@ public class Host  {
     /**
      * lazyStart will try to start Host if (not already booting) (tunnel is not open for a while)
      */
-    public void lazyStart (GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
+    public void lazyStart(GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
 
         if (isStarting()){
             return ;
