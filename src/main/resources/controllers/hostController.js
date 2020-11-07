@@ -35,6 +35,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope', '$routePar
             function unknowHost(){$scope.host = defaultHost} );
     }
 
+    // TODO set hard limit on how often polling is done
     var pollingHost;
 
     function startPollingHost() {

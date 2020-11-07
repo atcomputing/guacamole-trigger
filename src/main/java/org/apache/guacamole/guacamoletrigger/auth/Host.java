@@ -176,6 +176,8 @@ public class Host  {
 
                 shutdown=null;
 
+                // TODO If someone reconnects when stop command is running. at triggers start command while shutingdown.
+                // which can have weird effects. plus it's make the now booting host invisible for the api
                 hosts.remove(hostname);
             }
         }, shutdownDelay, TimeUnit.SECONDS);
@@ -198,7 +200,7 @@ public class Host  {
             // connection starts open. but will get closed eventually if Host can't be reached
             // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
 
-            int startUpDellay = 2000;
+            int startUpDellay = 2000; // TODO make this configurable
 
             // if Tunnel is already closed, try to start host direct
             if (!tunnel.isOpen()) {

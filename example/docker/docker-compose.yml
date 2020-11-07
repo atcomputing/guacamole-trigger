@@ -23,8 +23,10 @@ services:
       STOP_COMMAND: "docker stop -t 120  $$hostname"
       SHUTDOWN_DELAY: 30
       COMMAND_TIMEOUT: 30
-      IDLE_TIME: 15
-      DISCONNECT_TIME: 30
+      IDLE_TIME: 30
+      DISCONNECT_TIME: 60
+      # API_SESSION_TIMEOUT: 1
+
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z
