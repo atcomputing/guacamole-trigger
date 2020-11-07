@@ -12,6 +12,8 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
 
 
     function setTimers(config){
+        // TODO what to do if there is connection message
+
         if (config.idleTime !== 0 && config.disconnectTime !== 0){
         idleServices.idleCallback(config.idleTime * 1000,
             function (){

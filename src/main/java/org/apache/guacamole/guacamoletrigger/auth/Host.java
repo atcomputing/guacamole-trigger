@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import java.util.concurrent.TimeUnit;
 
 import org.apache.guacamole.GuacamoleException;
@@ -26,13 +28,11 @@ import org.apache.guacamole.guacamoletrigger.auth.Console;
 public class Host  {
 
 
-    // TODO TERMINATED is not used, and UNKNOW,and RUNNING are factional equivalent, besides log messages
     // and we can query that by checking if there is thread running for that.
     public enum hostStatus {
         UNKNOW,
         BOOTING,
-        RUNNING,
-        TERMINATED,
+        TERMINATING,
     };
 
     private static ConfigurationService settings = new ConfigurationService();
@@ -44,23 +44,18 @@ public class Host  {
                     settings.getCommandTimeout()
                 );
 
-    private ScheduledFuture<?> shutdown;
-    private hostStatus status = hostStatus.UNKNOW;
+    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> stopping = null;
+    private ScheduledFuture<?> starting = null;
+
     private String hostname;
     private int connections = 0; //TODO race condition
     private static final Logger logger = LoggerFactory.getLogger(Host.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
 
+    public static String Tunnel2HostName(GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException {
 
-    public static Host findHost (String hostname) {
-
-        return hosts.get(hostname);
-    }
-
-    public static Host getHost(AuthenticatedUser authUser,GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException, GuacamoleException {
-
-        // TODO remove not neeted when we dont use socket config
         GuacamoleSocket socket = tunnel.getSocket();
         if(!(socket instanceof ConfiguredGuacamoleSocket)){
 
@@ -68,26 +63,19 @@ public class Host  {
         }
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
-
-        String hostname =  socketConfig.getParameter("hostname");
-        Host host = findHost(hostname);
-        if (host == null) {
-            host = new Host(authUser, tunnel, hostname);
-
-        } else {
-
-            host.addConnection(authUser, tunnel);
-        }
-
-        return host;
-
+        return socketConfig.getParameter("hostname");
     }
-    private Host(AuthenticatedUser user,GuacamoleTunnel tunnel,String hostname ) throws GuacamoleUnsupportedException, GuacamoleException {
+
+    public static Host findHost (String hostname) {
+
+        return hosts.get(hostname);
+    }
+
+    public Host(String hostname ) throws GuacamoleException{
 
             this.hostname = hostname;
 
             hosts.put(hostname,this);
-            addConnection(user,tunnel);
     }
 
     public int openConnections() {
@@ -97,7 +85,6 @@ public class Host  {
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
         connections++;
-        // cancel shutdown. or make cancel shutdown a sepearte method
         logger.info("connection: {} added. now there are {} conections to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
     }
 
@@ -117,9 +104,24 @@ public class Host  {
          return hostname;
     }
 
-    public String getStatus (){
-         return status.name();
+    public hostStatus getStatus (){
+        if (isStarting()) {
+            return hostStatus.BOOTING;
+        }
+        if (isStopping()) {
+            return hostStatus.TERMINATING;
+        }
+        return hostStatus.UNKNOW;
     }
+
+
+    public boolean isStopping(){
+        return stopping != null && !stopping.isDone();
+    }
+    public boolean isStarting(){
+        return starting != null &&  ! starting.isDone();
+    }
+
     public String getConsole(){
         if (console != null){
             return console.getBufferOutput();
@@ -133,102 +135,102 @@ public class Host  {
      *
      * if a second stop command is scheduled while the first still has not finished, the second will be ignored
      */
-
+    // TODO add way to get guacamoleUsername for stop
     public void scheduleStop() throws GuacamoleException {
 
-        String command = settings.getStopCommand();
         Integer shutdownDelay = settings.getShutdownDelay();
-        if (command == null){ ;
 
-            logger.info("no stop command provide. dont schedule stopping: {}", this.hostname);
+        // if stopping is already scheduled, don't schedule another one
+        if (isStopping()){
             return;
         }
 
-        // if shutdown is already scheduled, don't schedule another one
-        if (shutdown != null){
+        logger.info("schedule stop command for host {}", this.hostname);
+
+        stopping = executor.schedule(new Runnable() {
+            @Override
+            public void run() {
+
+                stop();
+
+            }
+        }, shutdownDelay, TimeUnit.SECONDS);
+    }
+
+    private void stop(){
+        String command = "";
+        try{
+            command = settings.getStopCommand();
+        } catch (GuacamoleException e) {
+            logger.info("no stop command provide. skip stopping: {}", this.hostname);
             return;
         }
 
         Map<String,String> commandEnvironment = new HashMap<String,String>();
         commandEnvironment.put("hostname", hostname);
 
-        logger.info("schedule stop command for host {}", this.hostname);
+        logger.info("{}> {}", this.hostname, command);
 
-        shutdown = Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
-            @Override
-            public void run() {
+        if (starting != null) {
+
+            logger.error("Host stop command is run while host is still booting");
+        }
 
 
-                logger.info("cmd: {}, status:{}", command,status.name());
+        int exitCode = console.run(command ,commandEnvironment);
+        if (exitCode != 0){
+            logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
+        }
 
-                if (status == hostStatus.BOOTING) {
+        // remove reference to host. maybe this is overkill
+        if (starting == null || starting.isDone()) {
+            hosts.remove(hostname);
+            executor.shutdown();
+        }
 
-                    logger.error("Host stop command is run while host is still booting");
-                }
-
-                int exitCode = console.run(command ,commandEnvironment);
-                if (exitCode == 0){
-                    status = hostStatus.TERMINATED;
-                } else {
-                    status = hostStatus.UNKNOW;
-                    logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
-                }
-
-                shutdown=null;
-
-                // TODO If someone reconnects when stop command is running. at triggers start command while shutingdown.
-                // which can have weird effects. plus it's make the now booting host invisible for the api
-                hosts.remove(hostname);
-            }
-        }, shutdownDelay, TimeUnit.SECONDS);
     }
 
     /**
      * lazyStart will try to start Host if (not already booting) (tunnel is not open for a while)
      */
-    public void lazyStart   (GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
+    public void lazyStart (GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
 
-
-        if (shutdown != null) {
-            shutdown.cancel(false);
-            shutdown = null;
-            logger.info("canceld schedule stop command for host {}", this.hostname);
+        if (isStarting()){
+            return ;
         }
-        if (status != hostStatus.BOOTING){
-            status = hostStatus.BOOTING;
 
-            // connection starts open. but will get closed eventually if Host can't be reached
-            // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
+        // connection starts open. but will get closed eventually if Host can't be reached
+        // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
 
-            int startUpDellay = 2000; // TODO make this configurable
+        int startUpDellay = 2000; // TODO make this configurable
 
-            // if Tunnel is already closed, try to start host direct
-            if (!tunnel.isOpen()) {
-                startUpDellay = 0;
+        // if Tunnel is already closed, try to start host direct
+        if (!tunnel.isOpen()) {
+            startUpDellay = 0;
+        }
+
+        // if stop command is already running, it will start after stopcommand has finished
+        starting = executor.schedule(new Runnable() {
+            @Override
+            public void run() {
+
+                // host still is unreachable start it
+                if (! tunnel.isOpen()){
+                    start(authUser);
+                }
             }
+        }, startUpDellay, TimeUnit.MILLISECONDS);
+    }
 
-            Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
-                    @Override
-                    public void run() {
+    public void cancelStop(){
+        if (stopping != null &&  !stopping.isCancelled()) {
+            stopping.cancel(false);
+            logger.info("canceld schedule stop command for host {}", this.hostname);
 
-                        // host still is unreachable start it
-                        if (! tunnel.isOpen()){
-                            start(authUser);
-                        }else {
-                            // host was reachable
-                            status = hostStatus.RUNNING;
-                        }
-                    }
-                }, startUpDellay, TimeUnit.MILLISECONDS);
         }
     }
-    public void start (AuthenticatedUser authUser) {
 
-        if (shutdown != null) {
-            shutdown.cancel(false);
-            shutdown = null;
-            logger.info("canceld schedule stop command for host {}", this.hostname);
-        }
+    private void start(AuthenticatedUser authUser) {
 
         String command = "";
         try{
@@ -244,15 +246,11 @@ public class Host  {
         commandEnvironment.put("hostname", hostname);
         commandEnvironment.put("guacamoleUsername", guacamoleUsername);
 
-        status = hostStatus.BOOTING;
         console.clear();
 
-        logger.info("{}@{} {}: {}", guacamoleUsername,this.hostname, status.name(), command);
+        logger.info("{}@{}> {}", guacamoleUsername,this.hostname, command);
         int exitCode = console.run(command ,commandEnvironment);
-        if (exitCode == 0){
-            status = hostStatus.RUNNING;
-        } else {
-            status = hostStatus.UNKNOW;
+        if (exitCode != 0){
             logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
         }
     }

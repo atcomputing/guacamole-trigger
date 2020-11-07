@@ -45,8 +45,7 @@ public class Console {
 
     public int run (String command, Map<String,String> environment){
 
-        // TODO why not lock at start? can start and stop run the same time?
-        // there should never be more the 1 start job running same time per host
+        // there should never be more the 1 job running same time per host
         ProcessBuilder builder = new ProcessBuilder();
 
         // TODO test windows
@@ -70,7 +69,8 @@ public class Console {
             if ( ! process.waitFor(commandTimeout, TimeUnit.SECONDS)){
 
                 logger.error("command: '{}' took to long \n", command);
-                // TODO this wont kill desendancs
+                // TODO this wont kill desendancs,
+                // those will become zombie process in linux if they finish
                 process.destroyForcibly ();
             }
 
@@ -123,4 +123,3 @@ public class Console {
         }
     }
 }
-

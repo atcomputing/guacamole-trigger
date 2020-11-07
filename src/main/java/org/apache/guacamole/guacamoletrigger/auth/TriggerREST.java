@@ -17,9 +17,14 @@ import org.apache.guacamole.guacamoletrigger.auth.TunnelBuffer;
 import org.apache.guacamole.environment.Environment;
 import org.apache.guacamole.environment.LocalEnvironment;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Produces(MediaType.APPLICATION_JSON)
 public class TriggerREST {
 
+
+    private static final Logger logger = LoggerFactory.getLogger(TriggerREST.class);
     private TunnelBuffer tunnelBuffer ;
 
     public TriggerREST(TunnelBuffer tunnelBuffer){
@@ -42,18 +47,19 @@ public class TriggerREST {
 
     @GET
     @Path("host/{tunnelID}")
-    public Map<String, String> getHost(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
+    public Map<String, String> getHostInfo(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
 
         Host host = tunnelBuffer.get(tunnelID);
         if (host != null ){
 
             Map<String,String> anser = new HashMap<String,String>();
             anser.put("hostname",host.getHostname());
-            anser.put("status",host.getStatus());
+            anser.put("status",host.getStatus().name());
             anser.put("console",host.getConsole());
             return anser;
         }
-        System.out.println("could not find " +  tunnelID);
+
+        logger.info("Can`t give hostInfo for: " + tunnelID  );
         return null;
     }
 }

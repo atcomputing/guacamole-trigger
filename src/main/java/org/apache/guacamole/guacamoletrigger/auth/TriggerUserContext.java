@@ -5,11 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.guacamole.GuacamoleException;
-import org.apache.guacamole.GuacamoleUnsupportedException;
-import org.apache.guacamole.net.GuacamoleSocket;
 import org.apache.guacamole.net.GuacamoleTunnel;
-import org.apache.guacamole.protocol.ConfiguredGuacamoleSocket;
-import org.apache.guacamole.protocol.GuacamoleConfiguration;
 
 import org.apache.guacamole.net.auth.AbstractUserContext;
 import org.apache.guacamole.net.auth.AuthenticatedUser;
@@ -123,38 +119,42 @@ public class TriggerUserContext extends AbstractUserContext {
         if (tunnelBuffer.get(tunnelID)!= null){
             logger.error("tunnelID {} is registerd more then once" , tunnelID );
         }
-        Host registeredHost =  Host.getHost(authUser,tunnel);
+
+        String hostname  = Host.Tunnel2HostName(tunnel);
+
+        Host host = Host.findHost(hostname);
+
+        if (host == null) {
+            host = new Host( hostname);
+        }
+
+        host.addConnection(authUser, tunnel);
 
         // from this point onward webclient can query host status.
-        tunnelBuffer.push(tunnelID, registeredHost);
+        tunnelBuffer.push(tunnelID, host);
 
-        // start also cancels sceduled stop command
-        registeredHost.lazyStart(tunnel,authUser);
-        tunnelBuffer.push(tunnelID, registeredHost);
+        host.cancelStop();
+        host.lazyStart(tunnel,authUser);
+
+        tunnelBuffer.push(tunnelID, host);
     }
 
     public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {
 
-        GuacamoleSocket socket = tunnel.getSocket();
-        if(!(socket instanceof ConfiguredGuacamoleSocket)){
+        String hostname  = Host.Tunnel2HostName(tunnel);
 
-            throw new GuacamoleUnsupportedException("can't handle unconfigerd sockets");
-        }
-
-        GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
-
-        Host registeredHost = Host.findHost(socketConfig.getParameter("hostname"));
+        Host registeredHost = Host.findHost(hostname);
 
         if (registeredHost != null) {
             registeredHost.removeConnection(tunnel);
             if (registeredHost.openConnections() <= 0 ){
 
-                // stop is scheduled instead of run immediately. to prevent the situation where:
-                // If a connection fails, and it is the only connection to a host.
+                // stop is scheduled instead of running it directly. to prevent the situation where:
+                // If a connection fails, and it`s the only connection to a host.
                 // the connection count becomes 0, a stop command is run. guacamole succeeds in reconnecting.
                 // but you still lose connection, because you have turned off you host
 
-                // But if you schedule your Stop in near feature. you can cancel that if you reconnect.
+                // But if you schedule your Stop in near feature. you can cancel that if you try to reconnect.
                 // This also means if you can't boot and connect in the time (GuacamoleTriggerProperties.SHUTDOWN_DELAY)
                 // Then stopcomand will be run immediately after startup command
                 registeredHost.scheduleStop();
