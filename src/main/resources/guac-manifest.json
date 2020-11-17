@@ -27,6 +27,9 @@
     "html" : [
         "templates/notificationWrapper.html",
         "templates/idleWarning.html"
-    ]
+    ],
+    "translations" : [
+        "translations/en.json"
+   ]
 
 }

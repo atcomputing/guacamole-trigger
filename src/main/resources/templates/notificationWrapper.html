@@ -48,7 +48,7 @@
     <div class="notification"  ng-if="showBootNotification" style="width:100%;">
 
         <div ng-show="notification.title" class="title-bar" style="margin:0px">
-            <div class="title">"{{host.hostname}} is booting up"</div>
+            <div class="title">{{host.hostname}} {{ 'GUACAMOLE_TRIGGER.IS_BOOTING' |translate }}</div>
         </div>
         <console output=host.console></console>
 

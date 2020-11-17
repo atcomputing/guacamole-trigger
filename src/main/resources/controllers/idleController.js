@@ -6,13 +6,11 @@ angular.module('guacTrigger').controller('idleController', ['$scope', '$injector
     var idleConfigREST           = $injector.get('idleConfigREST');
 
     // TODO add countdown or mention time when disconect
-    // TODO translate
-    $scope.messages = "host will disconnect if idle";
+
     $scope.idle = false;
 
-
     function setTimers(config){
-        // TODO what to do if there is connection message
+        // TODO do we still set a timer if there is a notification (connection error)
 
         if (config.idleTime !== 0 && config.disconnectTime !== 0){
         idleServices.idleCallback(config.idleTime * 1000,

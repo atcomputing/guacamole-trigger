@@ -1,0 +1,7 @@
+{
+    "GUACAMOLE_TRIGGER" : {
+        "IDLE_WARNING"        : "Host will disconnect if idle",
+        "IS_BOOTING"          : "is booting up"
+    }
+
+}
