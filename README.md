@@ -34,8 +34,9 @@ there are some limitation:
 * This plugin will distinguish host by there hostname field in de connection config. if you refer to the same host with multiple names in de connection config. then t Guacamole can't track the connection count correctly
 
 ## Installation
+Download pluging from [release](https://github.com/atcomputing/guacamole-trigger/releases/latest)
 
-Compile this plug-in in with maven:
+Or compile this plug-in in with maven:
 ```
 mvn package
 ```
