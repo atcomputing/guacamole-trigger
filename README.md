@@ -7,6 +7,8 @@ Some [Examples](examples) are include for docker and google_cloud_platform.
 
 This plugin also provides a way to stop remote desktops that are idle.
 
+![screenshot](/doc/console.png)
+
 ## How it works
 
 With this plugin you can define a `start-command` and `stop-command`.
@@ -26,12 +28,16 @@ If the last connection is closed Guacamole will run the stop command for that ho
 This plugin also can track if a user is using Guacamole, and can close connection if the user has not moved it's mouse ore used its keyboard for `disconnect-time`
 So the stop command is, run even when the user has Guacamole open in the background for a long time.
 
-there are some limitation:
+There are some limitation with automatic stop:
 
 * This plugin only know about Guacamole connections. So it might stop machines your are still using via another method.
 * This plugin only stop machines when connection count reaches 0. not that are already 0. So it wont stop machines that have not been connected to Guacamole
-* if you restart Guacamole it will lose track of which host are still running
-* This plugin will distinguish host by there hostname field in de connection config. if you refer to the same host with multiple names in de connection config. then t Guacamole can't track the connection count correctly
+* Connection count is stored in memory. 
+  - If you restart Guacamole it will lose track of which host are still running.
+  - You cant run guacamole trigger in HA setup, were multiple guacamole instance connect to the same machines.
+* This plugin will distinguish host by there hostname field in de connection config. If you refer to the same host with multiple names in de connection config. then Guacamole can't track the connection count correctly
+
+If this is a problem. You can only use automatic start. And Configure the host's them self's to automatically shutdown if no one is logged in for a while.
 
 ## Installation
 Download pluging from [release](https://github.com/atcomputing/guacamole-trigger/releases/latest)
@@ -41,7 +47,7 @@ Or compile this plug-in in with maven:
 mvn package
 ```
 
-And copy target/guacamole-trigger-<version>.jar to your [GUACAMOLE_HOME/extensions](https://guacamole.apache.org/doc/gug/configuring-guacamole.html#guacamole-home) directory.
+And copy `guacamole-trigger-<version>.jar` to your [GUACAMOLE_HOME/extensions](https://guacamole.apache.org/doc/gug/configuring-guacamole.html#guacamole-home) directory.
 
 ## Usage
 
