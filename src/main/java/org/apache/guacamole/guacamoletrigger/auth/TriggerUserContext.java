@@ -146,8 +146,9 @@ public class TriggerUserContext extends AbstractUserContext {
         Host registeredHost = Host.findHost(hostname);
 
         if (registeredHost != null) {
-            registeredHost.removeConnection(tunnel);
-            if (registeredHost.openConnections() <= 0 ){
+
+            // removeConnection is thread save. so if 1 connnection is removed 2 times at the same time it will return true ones
+            if (registeredHost.removeConnection(tunnel) && registeredHost.openConnections() <= 0 ){
 
                 // stop is scheduled instead of running it directly. to prevent the situation where:
                 // If a connection fails, and it`s the only connection to a host.

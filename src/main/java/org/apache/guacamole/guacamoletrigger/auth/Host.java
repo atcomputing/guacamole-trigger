@@ -3,7 +3,11 @@ package org.apache.guacamole.guacamoletrigger.auth;
 import java.util.concurrent.ScheduledFuture;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -49,7 +53,9 @@ public class Host  {
     private ScheduledFuture<?> starting = null;
 
     private String hostname;
-    private int connections = 0; //TODO race condition
+
+    // connection is synchronizedSet so it becomse thread save
+    private Set<UUID> connections = Collections.synchronizedSet(new HashSet<UUID>()) ;
     private static final Logger logger = LoggerFactory.getLogger(Host.class);
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
@@ -79,25 +85,23 @@ public class Host  {
     }
 
     public int openConnections() {
-        return connections;
+        return connections.size();
     }
 
     public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
 
-        connections++;
-        logger.info("connection: {} added. now there are {} conections to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
+        UUID uuid = tunnel.getUUID();
+        connections.add(uuid);
+        logger.info("connection: {} added. now there are {} conections to host {}.",uuid.toString(), connections.size(), this.hostname);
     }
 
-    public void removeConnection(GuacamoleTunnel tunnel) {
+    public boolean removeConnection(GuacamoleTunnel tunnel) {
 
-        connections--;
-        if (connections < 0) {
 
-            logger.error("connection count for {} reached {}",  this.hostname, connections);
-            connections = 0;
-        }
-
-        logger.info("connection: {} removed. now there are {} conections to host {}.", tunnel.getUUID().toString(), connections, this.hostname);
+        UUID uuid = tunnel.getUUID();
+        boolean success = connections.remove(uuid);
+        logger.info("connection: {} removed. now there are {} conections to host {}.", uuid.toString(), connections.size(), this.hostname);
+        return success;
     }
 
     public String getHostname (){
