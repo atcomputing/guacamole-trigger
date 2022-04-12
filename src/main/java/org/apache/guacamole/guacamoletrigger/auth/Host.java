@@ -50,6 +50,7 @@ public class Host  {
 
     private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> stopping = null;
+    private ScheduledFuture<?> connecting = null;
     private ScheduledFuture<?> starting = null;
 
     private String hostname;
@@ -126,6 +127,10 @@ public class Host  {
         return starting != null &&  ! starting.isDone();
     }
 
+    public boolean isConnecting(){
+        return starting != null &&  ! connecting.isDone();
+    }
+
     public String getConsole(){
         if (console != null){
             return console.getBufferOutput();
@@ -161,6 +166,8 @@ public class Host  {
     }
 
     private void stop(AuthenticatedUser authUser) {
+
+        // TODO backoff limit
         String command = "";
         try{
             command = settings.getStopCommand();
@@ -172,12 +179,13 @@ public class Host  {
         String guacamoleUsername = authUser.getCredentials().getUsername();
 
         Map<String,String> commandEnvironment = new HashMap<String,String>();
+        // user tokenfilter
         commandEnvironment.put("guacamoleUsername", guacamoleUsername);
         commandEnvironment.put("hostname", hostname);
 
         logger.info("{}> {}", this.hostname, command);
 
-        if (starting != null) {
+        if (isStarting()) {
 
             logger.error("Host stop command is run while host is still booting");
         }
@@ -201,6 +209,7 @@ public class Host  {
      */
     public void lazyStart(GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
 
+        logger.error("lazyStart: {}",isStarting());
         if (isStarting()){
             return ;
         }
@@ -208,25 +217,36 @@ public class Host  {
         // connection starts open. but will get closed eventually if Host can't be reached
         // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
 
-        int startUpDellay = 2000; // TODO make this configurable
+        // TODO make this configurable
+        // TODO poll
+        // TODO backoff limit
+        // TODO clear logic for preventing starting and stopping
+        int startUpDellay = 20000;
 
         // if Tunnel is already closed, try to start host direct
-        if (!tunnel.isOpen()) {
-            startUpDellay = 0;
-        }
-
-        // if stop command is already running, it will start after stopcommand has finished
-        starting = executor.schedule(new Runnable() {
-            @Override
+        Runnable startTask = new Runnable() { public void run() { start(authUser); }};
+        int period = 200;
+        Runnable poll =  new Runnable() {
             public void run() {
 
-                // host still is unreachable start it
-                if (! tunnel.isOpen()){
-                    start(authUser);
+                int pollcounter = 0;
+                pollcounter++;
+                // host still is unreachable start host
+                if ( tunnel.isOpen()){
+                    if (pollcounter* period < 10000){ // 60 seconds # TODO make configurable
+                        connecting = executor.schedule(this,period,TimeUnit.MILLISECONDS);
+                    } else{
+                        starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
+                    }
+                } else {
+                    // if stop command is already running, it will start after stopcommand has finished
+                    // because executor is single trheaded
+                    starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
                 }
             }
-        }, startUpDellay, TimeUnit.MILLISECONDS);
-    }
+        };
+        connecting = executor.schedule(poll,period,TimeUnit.MILLISECONDS);
+   }
 
     public void cancelStop(){
         if (stopping != null &&  !stopping.isCancelled()) {
