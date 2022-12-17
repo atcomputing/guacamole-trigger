@@ -1,4 +1,5 @@
 angular.module('guacTrigger').directive('console', function () {
+    console.log("trigger: loaded console")
     return {
         scope: {
             output: '=output'
@@ -9,6 +10,8 @@ angular.module('guacTrigger').directive('console', function () {
             scope.$watch('output',function (){
                 // TODO find angularjs way to do this
                 // auto scroll down on changes
+
+                console.log("trigger: new output")
                 document.getElementsByClassName("console")[0].scrollTop =100000
             })
         }

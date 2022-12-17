@@ -3,7 +3,7 @@ services:
 
   guacd:
     container_name: guacd
-    image: guacamole/guacd:1.2.0
+    image: guacamole/guacd:1.4.0
     networks:
       - guacamole
 
@@ -19,15 +19,17 @@ services:
       GUACD_HOSTNAME: guacd
       GUACAMOLE_HOME: /etc/guacamole
       ENABLE_WEBSOCKET: "true"
-      START_COMMAND: "timeout -s 9 15 docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
+      START_COMMAND: "docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
       # STOP_COMMAND: "docker stop -t 120  $$hostname && echo stopping && sleep  60"
-      STOP_COMMAND: "stop.sh"
+      STOP_COMMAND: "extensions/stop.sh $$hostname"
       SHUTDOWN_DELAY: 90
-      COMMAND_TIMEOUT: 30
+      COMMAND_TIMEOUT: 10
       IDLE_TIME: 30
       DISCONNECT_TIME: 60
       # API_SESSION_TIMEOUT: 1
 
+      SECRET_KEY: test
+      JSON_SECRET_KEY: 4C0B569E4C96DF157EEE1B65DD0E4D41
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z
@@ -39,7 +41,7 @@ services:
     depends_on:
       - guacd
     ports:
-      - "80:8080"
+      - "9000:8080"
 
 networks:
   guacamole:

@@ -1,5 +1,6 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
+// import java.lang.ProcessHandle;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class Console {
 
         // TODO test windows
         if ( System.getProperty("os.name").toLowerCase().contains("win")) { // is windows
-            builder.command("cmd.exe", "/c", "dir");
+            builder.command("cmd.exe", "/c", "dir"); 
         } else {
             builder.command("sh", "-c", command);
         }
@@ -67,11 +68,18 @@ public class Console {
             Executors.newSingleThreadExecutor().submit(stderrGobbler);
 
             if ( ! process.waitFor(commandTimeout, TimeUnit.SECONDS)){
+                // process.pid() only works in java 9 or higher
+                // if (System.getProperty("os.name").startsWith("Linux")) {
+                //     logger.error("kill -2 -{}", + process.pid());
+                //     Runtime.getRuntime().exec("kill -2 -" + process.pid()).waitFor();
+                // }
+                // only works with jave 9 or higher
+                // ProcessHandle handle = process.toHandle();
+                // handle.descendants().forEach((child) -> child.destroy());
+                // handle.destroy();
 
-                logger.error("command: '{}' took to long \n", command);
-                // TODO this wont kill desendancs,
-                // those will become zombie process in linux if they finish
-                process.destroyForcibly ();
+                // can leave zombie process
+                //  process.destroy(); process.destroyForcibly ()
             }
 
             return process.exitValue();
@@ -116,7 +124,7 @@ public class Console {
 
             new BufferedReader(new InputStreamReader(inputStream)).lines().forEach( line ->{
                 lock.writeLock().lock();
-                buffer.add(line.substring(0, Math.min(line.length(), 120)));
+                buffer.add(line.substring(0, Math.min(line.length(), 240)));
                 lock.writeLock().unlock();
                 consumer.accept(line);
             });
