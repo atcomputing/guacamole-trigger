@@ -114,9 +114,23 @@ public class TriggerUserContext extends AbstractUserContext {
     public static void registerConnection (AuthenticatedUser authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         String tunnelID = tunnel.getUUID().toString();
-        TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(authUser.getCredentials().getUsername());
+        if (tunnelID == null) {
+            logger.error("could not get a tunnelID");
+            tunnelID= "dummy";
 
+        }
+        String userName = authUser.getCredentials().getUsername();
+        if (userName == null){
+
+            logger.error("could not get a username");
+            userName = "dummy";
+        }
+
+        TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(userName);
+
+        logger.error("tunnelBuffer:{}",tunnelBuffer);
         if (tunnelBuffer.get(tunnelID)!= null){
+            // FIXME
             logger.error("tunnelID {} is registerd more then once" , tunnelID );
         }
 
