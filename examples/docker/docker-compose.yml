@@ -19,12 +19,13 @@ services:
       GUACD_HOSTNAME: guacd
       GUACAMOLE_HOME: /etc/guacamole
       ENABLE_WEBSOCKET: "true"
-      START_COMMAND: "docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
+      # START_COMMAND: "docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
+      START_COMMAND: extensions/start.sh
       # STOP_COMMAND: "docker stop -t 120  $$hostname && echo stopping && sleep  60"
       STOP_COMMAND: "extensions/stop.sh $$hostname"
       SHUTDOWN_DELAY: 90
-      COMMAND_TIMEOUT: 10
-      IDLE_TIME: 30
+      COMMAND_TIMEOUT: 60
+      IDLE_TIME: 3000
       DISCONNECT_TIME: 60
       # API_SESSION_TIMEOUT: 1
 

@@ -1,22 +1,25 @@
-<meta name="before-children" content=".notification">
-<div ng-controller="hostController" id=test style=" display: block;
-             position: fixed;
-             width: 100%;
-             height: 100%;
-             top: 0;
-             left: 0;
-             right: 0;
-             bottom: 0;
-             z-index:-1;
-             ">
+<meta name="replace" content="guac-notification">
+<div ng-controller="hostController" id=test >
 
-    <!-- <div  ng-if="showBootNotification" > -->
-
-        <!-- <div ng-show="notification.title" class="title-bar" style="margin:0px"> -->
-        <div  class="title-bar" style="margin:0px">
-            <div class="title">{{host.hostname}} {{ 'GUACAMOLE_TRIGGER.IS_BOOTING' |translate }}</div>
-        </div>
-        <console output=host.console></console>
+    <guac-notification ng-if="showBootNotification===false" notification="status"></guac-notification>
+    <div ng-if="showBootNotification" id=test style="
+                display: block;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index:-1;
+                ">
+            <!-- <div ng-show="notification.title" class="title-bar" style="margin:0px"> -->
+            <!-- <div  class="title-bar" style="margin:0px"> -->
+            <!--     <div class="title">{{host.hostname}} {{ 'GUACAMOLE_TRIGGER.IS_BOOTING' |translate }}</div> -->
+            <!-- </div> -->
+            <h1 style="color:lightgrey;">Host:{{ host.hostname}} is booting</h1>>
+            <console  output="host.console"></console>
 
     </div>
 </div>
+

@@ -1,14 +1,21 @@
-angular.module('guacTrigger').factory('hostREST', ['$injector',
-        function HostREST($injector) {
+angular.module('guacTrigger').factory('hostREST', ['$injector','$routeParams',
+        function HostREST($injector,$routeParams) {
 
     // Required services
     var authenticationService = $injector.get('authenticationService');
     var requestService        = $injector.get('requestService');
     var idleConfigREST        = $injector.get('idleConfigREST');
 
+    //TODO
+    // var defaultHost = {hostname: "Host",
+    //                    status: "UNSET"}
     var service = {};
 
-    service.getHost = function getHost(host){
+    // service.getHost2 = function getHost2 (){
+    //     $scope.client = guacClientManager.getManagedClients()[$routeParams.id]
+    //
+    // }
+    service.getHost = function getHost(tunnelID){
 
         // Build HTTP parameters set
         var httpParameters = {
@@ -18,7 +25,7 @@ angular.module('guacTrigger').factory('hostREST', ['$injector',
         // Retrieve active connection
         return requestService({
             method  : 'GET',
-            url     : 'api/session/ext/trigger/host/' + encodeURIComponent(host),
+            url     : 'api/session/ext/trigger/host/' + encodeURIComponent(tunnelID),
             params  : httpParameters
         });
 

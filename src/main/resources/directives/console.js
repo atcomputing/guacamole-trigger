@@ -4,15 +4,22 @@ angular.module('guacTrigger').directive('console', function () {
         scope: {
             output: '=output'
         },
-        template: '<p "text" class="console">{{output}} </p>' ,
+        template: '<div class=console><p ng-bind-html="output | ansi2html"></p></div>' ,
         link: function (scope, element ) {
 
             scope.$watch('output',function (){
                 // TODO find angularjs way to do this
                 // auto scroll down on changes
+                // console.log(element)
 
-                console.log("trigger: new output")
-                document.getElementsByClassName("console")[0].scrollTop =100000
+                // console.log("trigger:" + scope.$id + " new output");
+                // el=document.getElementsByClassName("console")[0];
+                // console.log(el)
+                // scroledDown = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) < 10
+                // console.log(scroledDown);
+                // el.scrollTop =100000;
+                // scroledDown = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) < 1
+                // console.log(scroledDown);
             })
         }
     };

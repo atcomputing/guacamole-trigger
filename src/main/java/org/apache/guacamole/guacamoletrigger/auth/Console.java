@@ -79,7 +79,10 @@ public class Console {
                 // handle.destroy();
 
                 // can leave zombie process
-                //  process.destroy(); process.destroyForcibly ()
+
+                 process.destroy();
+                 process.destroyForcibly ();
+                logger.debug("commnand destroyed");
             }
 
             return process.exitValue();

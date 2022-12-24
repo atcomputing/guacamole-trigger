@@ -98,7 +98,6 @@ public class Host  {
 
     public boolean removeConnection(GuacamoleTunnel tunnel) {
 
-
         UUID uuid = tunnel.getUUID();
         boolean success = connections.remove(uuid);
         logger.info("connection: {} removed. now there are {} conections to host {}.", uuid.toString(), connections.size(), this.hostname);
@@ -124,7 +123,9 @@ public class Host  {
         return stopping != null && !stopping.isDone();
     }
     public boolean isStarting(){
-        return starting != null &&  ! starting.isDone();
+        boolean startTaskRunning = (starting != null &&  ! starting.isDone());
+        boolean connectingTaskRunning = (connecting != null &&  ! connecting.isDone());
+        return  connectingTaskRunning || startTaskRunning;
     }
 
     public boolean isConnecting(){
@@ -197,7 +198,7 @@ public class Host  {
         }
 
         // remove reference to host. maybe this is overkill
-        if (starting == null || starting.isDone()) {
+        if (isStarting()) {
             hosts.remove(hostname);
             executor.shutdown();
         }
@@ -221,7 +222,6 @@ public class Host  {
         // TODO poll
         // TODO backoff limit
         // TODO clear logic for preventing starting and stopping
-        int startUpDellay = 20000;
 
         // if Tunnel is already closed, try to start host direct
         Runnable startTask = new Runnable() { public void run() { start(authUser); }};
@@ -233,14 +233,16 @@ public class Host  {
                 pollcounter++;
                 // host still is unreachable start host
                 if ( tunnel.isOpen()){
-                    if (pollcounter* period < 10000){ // 60 seconds # TODO make configurable
+                    if (pollcounter * period < 10000){ // 60 seconds # TODO make configurable
                         connecting = executor.schedule(this,period,TimeUnit.MILLISECONDS);
                     } else{
+
+                        logger.debug("start command after:",(period * pollcounter ) / 1000);
                         starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
                     }
                 } else {
-                    // if stop command is already running, it will start after stopcommand has finished
-                    // because executor is single trheaded
+                    // if stop command is already running, it will start after stopcommand has finished # TODO not true
+                    // because executor is single trheaded 
                     starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
                 }
             }
@@ -278,6 +280,8 @@ public class Host  {
         int exitCode = console.run(command ,commandEnvironment);
         if (exitCode != 0){
             logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
+        } else {
+            logger.debug("start command for {}@{}, succeeded",guacamoleUsername, hostname );
         }
     }
 }

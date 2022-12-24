@@ -19,6 +19,10 @@ public class ConfigurationService{
 
     private Environment environment;
 
+    public ConfigurationService () {
+        environment = LocalEnvironment.getInstance();
+    }
+
     public static final StringGuacamoleProperty START_COMMAND =
         new StringGuacamoleProperty() {
 

@@ -12,6 +12,8 @@
         "org.apache.guacamole.guacamoletrigger.auth.TriggerAuthenticationProvider"
     ],
     "js" : [
+        "vendor/ansi_up.js",
+        "filter/ansi2html.js",
         "triggerModule.js",
         "directives/console.js",
         "controllers/hostController.js",
