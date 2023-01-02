@@ -17,19 +17,20 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
 
         $scope.client = guacClientManager.getManagedClients()[$routeParams.id]
         
-        // TODO this does now work keeps polling for client with error
-        if ($scope.client.id !== $routeParams.id) {
-
-            console.log("stop wrong id")
-            stopPollingHost()
-            return
-        }
 
         if (! $scope.client|| ! $scope.client.tunnel || !$scope.client.tunnel.uuid ){
 
             console.log("stop missing")
             stopPollingHost();
             $timeout(setHostState, 2000);
+            return
+        }
+
+        // TODO this does now work keeps polling for client with error
+        if ($scope.client.id !== $routeParams.id) {
+
+            console.log("stop wrong id")
+            stopPollingHost()
             return
         }
 
@@ -42,7 +43,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
             return
         }
 
-        if (["DISCONNECTED","CLIENT_ERROR"].includes($scope.client.clientState.connectionState)) {
+        if (["DISCONNECTED"].includes($scope.client.clientState.connectionState)) {
 
             console.log("reconnect")
             console.log($scope.client)
@@ -69,6 +70,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
                 console.log(host)
             },
             function unknowTunnel(e) {
+                console.log("failed finding host status")
                 stopPollingHost();
                 $scope.host = defaultHost}
              );

@@ -13,11 +13,12 @@ angular.module('guacTrigger').directive('console', function () {
                 // console.log(element)
 
                 // console.log("trigger:" + scope.$id + " new output");
-                // el=document.getElementsByClassName("console")[0];
+                // TODO get this from agurment link
+                el=document.getElementsByClassName("console")[0];
                 // console.log(el)
                 // scroledDown = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) < 10
                 // console.log(scroledDown);
-                // el.scrollTop =100000;
+                el.scrollTop =100000;
                 // scroledDown = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) < 1
                 // console.log(scroledDown);
             })

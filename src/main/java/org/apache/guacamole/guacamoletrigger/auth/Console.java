@@ -51,8 +51,10 @@ public class Console {
 
         // TODO test windows
         if ( System.getProperty("os.name").toLowerCase().contains("win")) { // is windows
-            builder.command("cmd.exe", "/c", "dir"); 
+            builder.command("cmd.exe", "/c", "dir");
         } else {
+
+            // TODO if we cant relable kill procces on timeout we can run command with timeout
             builder.command("sh", "-c", command);
         }
         builder.directory(cwd);
@@ -73,12 +75,17 @@ public class Console {
                 //     logger.error("kill -2 -{}", + process.pid());
                 //     Runtime.getRuntime().exec("kill -2 -" + process.pid()).waitFor();
                 // }
+                // this might be solutino for this:
+                //
+                // if (proc instanceof UNIXProcess) {
+                // Field f = proc.getClass().getDeclaredField("pid");
+                // f.setAccessible(true);
+                // int pid = f.get(proc);
+                // }
                 // only works with jave 9 or higher
                 // ProcessHandle handle = process.toHandle();
                 // handle.descendants().forEach((child) -> child.destroy());
                 // handle.destroy();
-
-                // can leave zombie process
 
                  process.destroy();
                  process.destroyForcibly ();

@@ -101,6 +101,7 @@ public class TriggerUserContext extends AbstractUserContext {
         // stores for this user the 10 most recent (tunnelID,host)
         // This means you can start 10 connection per user,at the same time where you still get correct boot messags
         user2TunnelBuffer.put(username,new TunnelBuffer(10));
+        logger.error("user?:{}",username);
     }
     protected void finalize(){
 
@@ -114,21 +115,26 @@ public class TriggerUserContext extends AbstractUserContext {
     public static void registerConnection (AuthenticatedUser authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         String tunnelID = tunnel.getUUID().toString();
-        if (tunnelID == null) {
-            logger.error("could not get a tunnelID");
-            tunnelID= "dummy";
+        // if (tunnelID == null) {
+        //     logger.error("could not get a tunnelID");
+        //     tunnelID= "dummy";
+        //
+        // }
+        // String userName = authUser.getCredentials().getUsername();
+        String userName = authUser.getAuthenticationProvider().getUserContext(authUser).self().getIdentifier();
 
-        }
-        String userName = authUser.getCredentials().getUsername();
         if (userName == null){
 
-            logger.error("could not get a username");
-            userName = "dummy";
+            logger.info("could not get a username");
+            userName =  AuthenticatedUser.ANONYMOUS_IDENTIFIER; 
         }
 
         TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(userName);
-
-        logger.error("tunnelBuffer:{}",tunnelBuffer);
+        if (tunnelBuffer == null){
+            // user context never initialized, by some auth provider
+            tunnelBuffer = new TunnelBuffer(10);
+            user2TunnelBuffer.put(userName,tunnelBuffer);
+        }
         if (tunnelBuffer.get(tunnelID)!= null){
             // FIXME
             logger.error("tunnelID {} is registerd more then once" , tunnelID );
@@ -142,19 +148,20 @@ public class TriggerUserContext extends AbstractUserContext {
             host = new Host( hostname);
         }
 
-        host.addConnection(authUser, tunnel);
+        host.addConnection(userName, tunnel);
 
         // from this point onward webclient can query host status.
         tunnelBuffer.push(tunnelID, host);
 
         host.cancelStop();
-        host.lazyStart(tunnel,authUser);
+        host.lazyStart(tunnel,userName);
 
         tunnelBuffer.push(tunnelID, host);
     }
 
-    public static void deregisterConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) throws GuacamoleException {
+    public static void deregisterConnection (AuthenticatedUser  authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
+        String userName = authUser.getAuthenticationProvider().getUserContext(authUser).self().getIdentifier();
         String hostname  = Host.Tunnel2HostName(tunnel);
 
         Host registeredHost = Host.findHost(hostname);
@@ -172,7 +179,7 @@ public class TriggerUserContext extends AbstractUserContext {
                 // But if you schedule your Stop in near feature. you can cancel that if you try to reconnect.
                 // This also means if you can't boot and connect in the time (GuacamoleTriggerProperties.SHUTDOWN_DELAY)
                 // Then stopcomand will be run immediately after startup command
-                registeredHost.scheduleStop(user);
+                registeredHost.scheduleStop(userName);
             }
         } else {
             String tunnelID = tunnel.getUUID().toString();
@@ -192,6 +199,7 @@ public class TriggerUserContext extends AbstractUserContext {
 
     @Override
     public Object getResource() throws GuacamoleException {
+        logger.error("self?:{}",self().getIdentifier());
         return new TriggerREST(user2TunnelBuffer.get(self().getIdentifier()));
     }
 

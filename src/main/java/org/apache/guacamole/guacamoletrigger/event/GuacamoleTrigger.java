@@ -4,11 +4,11 @@ import org.apache.guacamole.GuacamoleException;
 import org.apache.guacamole.net.event.TunnelConnectEvent;
 import org.apache.guacamole.net.event.TunnelCloseEvent;
 import org.apache.guacamole.net.event.listener.Listener;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.guacamole.guacamoletrigger.auth.TriggerUserContext;
 
 public class GuacamoleTrigger implements Listener {
-
 
     public GuacamoleTrigger() throws GuacamoleException{}
 
@@ -16,7 +16,6 @@ public class GuacamoleTrigger implements Listener {
     public void handleEvent(Object event) throws GuacamoleException{
 
         if (event instanceof TunnelConnectEvent) {
-
             TunnelConnectEvent tcEvent = (TunnelConnectEvent) event;
             TriggerUserContext.registerConnection(tcEvent.getAuthenticatedUser(), tcEvent.getTunnel());
 

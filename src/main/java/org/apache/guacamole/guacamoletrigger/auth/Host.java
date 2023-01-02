@@ -89,7 +89,7 @@ public class Host  {
         return connections.size();
     }
 
-    public void addConnection (AuthenticatedUser user, GuacamoleTunnel tunnel) {
+    public void addConnection (String user, GuacamoleTunnel tunnel) {
 
         UUID uuid = tunnel.getUUID();
         connections.add(uuid);
@@ -145,7 +145,7 @@ public class Host  {
      *
      * if a second stop command is scheduled while the first still has not finished, the second will be ignored
      */
-    public void scheduleStop(AuthenticatedUser authUser) throws GuacamoleException {
+    public void scheduleStop(String user) throws GuacamoleException {
 
         Integer shutdownDelay = settings.getShutdownDelay();
 
@@ -160,13 +160,13 @@ public class Host  {
             @Override
             public void run() {
 
-                stop(authUser);
+                stop(user);
 
             }
         }, shutdownDelay, TimeUnit.SECONDS);
     }
 
-    private void stop(AuthenticatedUser authUser) {
+    private void stop(String user) {
 
         // TODO backoff limit
         String command = "";
@@ -177,11 +177,9 @@ public class Host  {
             return;
         }
 
-        String guacamoleUsername = authUser.getCredentials().getUsername();
-
         Map<String,String> commandEnvironment = new HashMap<String,String>();
         // user tokenfilter
-        commandEnvironment.put("guacamoleUsername", guacamoleUsername);
+        commandEnvironment.put("guacamoleUsername", user);
         commandEnvironment.put("hostname", hostname);
 
         logger.info("{}> {}", this.hostname, command);
@@ -208,7 +206,7 @@ public class Host  {
     /**
      * lazyStart will try to start Host if (not already booting) (tunnel is not open for a while)
      */
-    public void lazyStart(GuacamoleTunnel tunnel,AuthenticatedUser authUser) {
+    public void lazyStart(GuacamoleTunnel tunnel,String user) {
 
         logger.error("lazyStart: {}",isStarting());
         if (isStarting()){
@@ -224,7 +222,7 @@ public class Host  {
         // TODO clear logic for preventing starting and stopping
 
         // if Tunnel is already closed, try to start host direct
-        Runnable startTask = new Runnable() { public void run() { start(authUser); }};
+        Runnable startTask = new Runnable() { public void run() { start(user); }};
         int period = 200;
         Runnable poll =  new Runnable() {
             public void run() {
@@ -258,7 +256,7 @@ public class Host  {
         }
     }
 
-    private void start(AuthenticatedUser authUser) {
+    private void start(String user) {
 
         String command = "";
         try{
@@ -268,20 +266,19 @@ public class Host  {
             return;
         }
 
-        String guacamoleUsername = authUser.getCredentials().getUsername();
 
         Map<String,String> commandEnvironment = new HashMap<String,String>();
         commandEnvironment.put("hostname", hostname);
-        commandEnvironment.put("guacamoleUsername", guacamoleUsername);
+        commandEnvironment.put("guacamoleUsername", user);
 
         console.clear();
 
-        logger.info("{}@{}> {}", guacamoleUsername,this.hostname, command);
+        logger.info("{}@{}> {}", user,this.hostname, command);
         int exitCode = console.run(command ,commandEnvironment);
         if (exitCode != 0){
-            logger.error("start command for {}@{}, failed with exit code {}",guacamoleUsername, hostname, exitCode );
+            logger.error("start command for {}@{}, failed with exit code {}",user, hostname, exitCode );
         } else {
-            logger.debug("start command for {}@{}, succeeded",guacamoleUsername, hostname );
+            logger.debug("start command for {}@{}, succeeded",user, hostname );
         }
     }
 }
