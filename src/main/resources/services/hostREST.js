@@ -17,7 +17,6 @@ angular.module('guacTrigger').factory('hostREST', ['$injector','$routeParams',
     // }
     service.getHost = function getHost(tunnelID){
 
-        console.log("get:" ,tunnelID)
         // Build HTTP parameters set
         var httpParameters = {
             token : authenticationService.getCurrentToken()
