@@ -101,7 +101,6 @@ public class TriggerUserContext extends AbstractUserContext {
         // stores for this user the 10 most recent (tunnelID,host)
         // This means you can start 10 connection per user,at the same time where you still get correct boot messags
         user2TunnelBuffer.put(username,new TunnelBuffer(10));
-        logger.error("user?:{}",username);
     }
     protected void finalize(){
 
@@ -126,7 +125,7 @@ public class TriggerUserContext extends AbstractUserContext {
         if (userName == null){
 
             logger.info("could not get a username");
-            userName =  AuthenticatedUser.ANONYMOUS_IDENTIFIER; 
+            userName =  AuthenticatedUser.ANONYMOUS_IDENTIFIER;
         }
 
         TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(userName);
@@ -199,7 +198,6 @@ public class TriggerUserContext extends AbstractUserContext {
 
     @Override
     public Object getResource() throws GuacamoleException {
-        logger.error("self?:{}",self().getIdentifier());
         return new TriggerREST(user2TunnelBuffer.get(self().getIdentifier()));
     }
 

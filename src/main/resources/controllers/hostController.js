@@ -22,7 +22,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
 
             console.log("stop missing")
             stopPollingHost();
-            $timeout(setHostState, 2000);
+            $timeout(setHostState, 2000); // TODO this cause infinit loop. dont make it stop polling . keep a missing pol count
             return
         }
 
