@@ -1,8 +1,8 @@
 <meta name="replace" content="guac-notification">
-<div ng-controller="hostController" id=test >
+<div ng-controller="hostController">
 
-    <guac-notification ng-if="showBootNotification===false" notification="status"></guac-notification>
-    <div ng-if="showBootNotification" id=test style="
+    <guac-notification ng-if="$root.showBootNotification===false" notification="status"></guac-notification>
+    <div ng-if="$root.showBootNotification"  style="
                 display: block;
                 position: fixed;
                 width: 100%;
@@ -19,9 +19,8 @@
             <!-- </div> -->
             <!-- FIXME make title console configerable -->
             <!-- <h1 class=console-title>Host:{{ host.hostname}} is booting</h1>> -->
-            <h1 class=console-title>Your Lab is being deployed:</h1>>
-            <console  output="host.console"></console>
-
+            <h1 class="console-title">Your Lab is being deployed:</h1>
+            <console  output="$root.host.console"></console>
     </div>
 </div>
 

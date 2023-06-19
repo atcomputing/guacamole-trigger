@@ -3,7 +3,7 @@ services:
 
   guacd:
     container_name: guacd
-    image: guacamole/guacd:1.4.0
+    image: guacamole/guacd:1.5.2
     networks:
       - guacamole
 
@@ -24,9 +24,9 @@ services:
       # STOP_COMMAND: "docker stop -t 120  $$hostname && echo stopping && sleep  60"
       STOP_COMMAND: "extensions/stop.sh $$hostname"
       SHUTDOWN_DELAY: 90
-      COMMAND_TIMEOUT: 60
-      IDLE_TIME: 3000
-      DISCONNECT_TIME: 60
+      COMMAND_TIMEOUT: 600
+      IDLE_TIME: 20
+      DISCONNECT_TIME: 120
       # API_SESSION_TIMEOUT: 1
 
       SECRET_KEY: test

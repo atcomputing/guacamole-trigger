@@ -98,9 +98,9 @@ public class TriggerUserContext extends AbstractUserContext {
         // Set the authProvider to the calling authProvider object.
         this.authProvider = authProvider;
 
-        // stores for this user the 10 most recent (tunnelID,host)
-        // This means you can start 10 connection per user,at the same time where you still get correct boot messags
-        user2TunnelBuffer.put(username,new TunnelBuffer(10));
+        // stores for this user the 100 most recent (tunnelID,host)
+        // This means you can start 100 connection per user,at the same time where you still get correct boot messags
+        user2TunnelBuffer.put(username,new TunnelBuffer(100));
     }
     protected void finalize(){
 
