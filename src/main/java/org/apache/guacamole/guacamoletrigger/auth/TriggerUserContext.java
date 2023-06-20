@@ -139,7 +139,7 @@ public class TriggerUserContext extends AbstractUserContext {
             logger.error("tunnelID {} is registerd more then once" , tunnelID );
         }
 
-        String hostname  = Host.Tunnel2HostName(tunnel);
+        String hostname  = Host.tunnel2HostName(tunnel);
 
         Host host = Host.findHost(hostname);
 
@@ -161,7 +161,7 @@ public class TriggerUserContext extends AbstractUserContext {
     public static void deregisterConnection (AuthenticatedUser  authUser, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         String userName = authUser.getAuthenticationProvider().getUserContext(authUser).self().getIdentifier();
-        String hostname  = Host.Tunnel2HostName(tunnel);
+        String hostname  = Host.tunnel2HostName(tunnel);
 
         Host registeredHost = Host.findHost(hostname);
 
@@ -178,7 +178,7 @@ public class TriggerUserContext extends AbstractUserContext {
                 // But if you schedule your Stop in near feature. you can cancel that if you try to reconnect.
                 // This also means if you can't boot and connect in the time (GuacamoleTriggerProperties.SHUTDOWN_DELAY)
                 // Then stopcomand will be run immediately after startup command
-                registeredHost.scheduleStop(userName);
+                registeredHost.scheduleStop(userName, tunnel);
             }
         } else {
             String tunnelID = tunnel.getUUID().toString();

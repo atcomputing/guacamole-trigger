@@ -5,6 +5,7 @@
             <param name="hostname">vnc</param>
             <param name="port">5901</param>
             <param name="password">test</param>
+            <param name="dummy">test</param>
         </connection>
         <connection name="10.0.0.1">
             <protocol>vnc</protocol>

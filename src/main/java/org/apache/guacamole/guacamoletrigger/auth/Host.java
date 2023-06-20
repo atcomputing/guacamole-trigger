@@ -61,8 +61,8 @@ public class Host  {
 
     private static ConcurrentMap<String,Host> hosts = new ConcurrentHashMap<String,Host>();
 
-    public static String Tunnel2HostName(GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException {
 
+    public static GuacamoleConfiguration tunnel2Configuration (GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException {
         GuacamoleSocket socket = tunnel.getSocket();
         if(!(socket instanceof ConfiguredGuacamoleSocket)){
 
@@ -70,7 +70,23 @@ public class Host  {
         }
 
         GuacamoleConfiguration socketConfig = ((ConfiguredGuacamoleSocket) socket).getConfiguration();
-        return socketConfig.getParameter("hostname");
+        return socketConfig;
+    }
+
+
+    public static String tunnel2HostName(GuacamoleTunnel tunnel) throws GuacamoleUnsupportedException {
+
+        return tunnel2Configuration(tunnel).getParameter("hostname");
+    }
+    public Map<String,String>  createEnv(GuacamoleTunnel tunnel, String userName) throws GuacamoleUnsupportedException {
+
+
+        GuacamoleConfiguration socketConfig = tunnel2Configuration(tunnel);
+        Map<String,String> env = socketConfig.getParameters();
+        env.put("protocol", socketConfig.getProtocol());
+        env.put("guacamoleUsername", userName);
+
+        return env;
     }
 
     public static Host findHost (String hostname) {
@@ -145,10 +161,10 @@ public class Host  {
      *
      * if a second stop command is scheduled while the first still has not finished, the second will be ignored
      */
-    public void scheduleStop(String user) throws GuacamoleException {
+    public void scheduleStop(String user, GuacamoleTunnel tunnel) throws GuacamoleException {
 
         Integer shutdownDelay = settings.getShutdownDelay();
-
+        Map<String,String> env = createEnv(tunnel, user);
         // if stopping is already scheduled, don't schedule another one
         if (isStopping()){
             return;
@@ -160,13 +176,13 @@ public class Host  {
             @Override
             public void run() {
 
-                stop(user);
+                stop(user, env);
 
             }
         }, shutdownDelay, TimeUnit.SECONDS);
     }
 
-    private void stop(String user) {
+    private void stop(String user, Map<String,String> env) {
 
         // TODO backoff limit
         String command = "";
@@ -177,11 +193,6 @@ public class Host  {
             return;
         }
 
-        Map<String,String> commandEnvironment = new HashMap<String,String>();
-        // user tokenfilter
-        commandEnvironment.put("guacamoleUsername", user);
-        commandEnvironment.put("hostname", hostname);
-
         logger.info("{}> {}", this.hostname, command);
 
         if (isStarting()) {
@@ -190,7 +201,7 @@ public class Host  {
         }
 
 
-        int exitCode = console.run(command ,commandEnvironment);
+        int exitCode = console.run(command, env);
         if (exitCode != 0){
             logger.error("stop command for {}, failed with exit code {}",hostname, exitCode );
         }
@@ -206,13 +217,13 @@ public class Host  {
     /**
      * lazyStart will try to start Host if (not already booting) (tunnel is not open for a while)
      */
-    public void lazyStart(GuacamoleTunnel tunnel,String user) {
+    public void lazyStart(GuacamoleTunnel tunnel,String user) throws GuacamoleException{
 
         logger.error("lazyStart: {}",isStarting());
         if (isStarting()){
             return ;
         }
-
+        Map<String,String> env = createEnv(tunnel, user);
         // connection starts open. but will get closed eventually if Host can't be reached
         // so waith a bit. so guacd gets time to detect host is unreachable and close the tunnel
 
@@ -222,7 +233,7 @@ public class Host  {
         // TODO clear logic for preventing starting and stopping
 
         // if Tunnel is already closed, try to start host direct
-        Runnable startTask = new Runnable() { public void run() { start(user); }};
+        Runnable startTask = new Runnable() { public void run() { start(user, env); }};
         int period = 200;
         Runnable poll =  new Runnable() {
             public void run() {
@@ -240,7 +251,7 @@ public class Host  {
                     }
                 } else {
                     // if stop command is already running, it will start after stopcommand has finished # TODO not true
-                    // because executor is single trheaded 
+                    // because executor is single trheaded
                     starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
                 }
             }
@@ -252,11 +263,10 @@ public class Host  {
         if (stopping != null &&  !stopping.isCancelled()) {
             stopping.cancel(false);
             logger.info("canceld schedule stop command for host {}", this.hostname);
-
         }
     }
 
-    private void start(String user) {
+    private void start(String user, Map<String,String> env) {
 
         String command = "";
         try{
@@ -266,15 +276,10 @@ public class Host  {
             return;
         }
 
-
-        Map<String,String> commandEnvironment = new HashMap<String,String>();
-        commandEnvironment.put("hostname", hostname);
-        commandEnvironment.put("guacamoleUsername", user);
-
         console.clear();
 
         logger.info("{}@{}> {}", user,this.hostname, command);
-        int exitCode = console.run(command ,commandEnvironment);
+        int exitCode = console.run(command, env);
         if (exitCode != 0){
             logger.error("start command for {}@{}, failed with exit code {}",user, hostname, exitCode );
         } else {

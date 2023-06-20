@@ -1,5 +1,5 @@
 #! /bin/bash
-
+env
 echo "$(tput  -T xterm setaf 1 ) test" # test make red
 for i in {1..20}; do
     echo "$i"
