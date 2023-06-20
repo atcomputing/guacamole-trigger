@@ -1,5 +1,5 @@
-angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope','$timeout', '$routeParams', '$injector', '$interval',
-  function hostController($scope,$rootScope, $timeout, $routeParams, $injector, $interval) {
+angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope','$timeout', '$routeParams', '$injector',
+  function hostController($scope,$rootScope, $timeout, $routeParams, $injector) {
 
 
     var hostREST                 = $injector.get('hostREST');
@@ -16,17 +16,17 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
     $rootScope.showBootNotification = $rootScope.showBootNotification || false;
     $rootScope.host = $rootScope.host || defaultHost;
 
-    console.log("trigger: host controler loaded"); // TODO remove messages
-    console.log($rootScope.showBootNotification);
-    console.log($rootScope.host);
+    // console.log("trigger: host controler loaded"); // TODO remove messages
+    // console.log($rootScope.showBootNotification);
+    // console.log($rootScope.host);
 
     function pollHost(client){
       let pollCounter = 0;
       function poll() {
         pollCounter++;
-        console.log(client);
-        console.log(client.clientState.connectionState);
-        console.log($rootScope.showBootNotification);
+        // console.log(client);
+        // console.log(client.clientState.connectionState);
+        // console.log($rootScope.showBootNotification);
 
         // wrong id stop
         if (client.id && client.id !== $routeParams.id) {
@@ -58,7 +58,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
         // success stop
         if (client.clientState.connectionState === "CONNECTED" ){
 
-          console.log("stop connect");
+          // console.log("stop connect");
           $rootScope.showBootNotification = false;
           return;
         }
@@ -67,15 +67,18 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
           function foundHost(host){
 
             if (host){
+              // console.log(host);
               $rootScope.host = host;
               $rootScope.showBootNotification = ["BOOTING","TERMINATING"].includes(host.status);
-              console.log(host);
+              if (pollCounter > 600) { // limit count some way
+                $rootScope.showBootNotification = false;
+              }
               if ($rootScope.showBootNotification) {
                 $timeout(poll,1000);
               }
             }
           },
-          function unknowTunnel(e) {
+          function unknowTunnel() {
             console.log("failed finding host status");
             $rootScope.host = defaultHost;
           }
@@ -87,14 +90,14 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
     function waitForClient(){
 
       return new Promise((resolve, reject) => {
+        let counter = 0;
         function wait() {
-          console.log("waithing");
+          counter++;
           // let client = guacClientManager.getManagedClient($routeParams.id);
           let managedClients = guacClientManager.getManagedClients();
           if ($routeParams.id in managedClients) {
             let client = managedClients[$routeParams.id];
 
-            console.log(client);
             if (client.id && client.tunnel && client.tunnel.uuid) {
 
               resolve(client);
@@ -102,12 +105,16 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
             }
 
           }
-          $timeout(wait, 1000);
+          if (counter < 100){ // limit waith
+            $timeout(wait, 1000);
+          } else {
+            reject();
+          }
         }
         wait();
       });
     }
-    // $scope.client = guacClientManager.getManagedClient($routeParams.id);
+    // for now dont watch connection state. only show boot messages after reconnect.
     // let cancelWatch = $scope.$watchGroup([
     //   'client',
     // ], function test (newvar){
@@ -115,6 +122,7 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
     //   console.log(newvar);
     //   setHostState(newvar);
     // });
-    waitForClient().then(pollHost);
-    // setHostState($scope.client);
+    waitForClient()
+      .then(pollHost)
+      .catch(() => $rootScope.showBootNotification = false);
   }]);
