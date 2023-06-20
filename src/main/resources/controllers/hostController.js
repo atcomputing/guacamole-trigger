@@ -47,12 +47,12 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
         }
 
         if (["DISCONNECTED", "CLIENT_ERROR"].includes(client.clientState.connectionState)) {
-          console.log("reconnect");
-          console.log(pollCounter);
-          if (pollCounter > 1) { // dont reconnect if you just connecting
+          if (pollCounter > 10) { // dont reconnect if you just connecting
+            console.log("reconnect");
+            // console.log(pollCounter);
             guacClientManager.replaceManagedClient(client.id);
+            return;
           }
-          return;
         }
 
         // success stop
