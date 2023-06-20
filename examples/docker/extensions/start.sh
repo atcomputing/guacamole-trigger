@@ -1,7 +1,7 @@
 #! /bin/bash
 
 echo "$(tput  -T xterm setaf 1 ) test" # test make red
-for i in {1..5}; do
+for i in {1..20}; do
     echo "$i"
     sleep 1
 done;

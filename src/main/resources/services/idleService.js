@@ -8,7 +8,11 @@ angular.module('guacTrigger').factory('idleService', ['$timeout','$document',
     var TimeOut_Thread = null;
 
     function wakeup (){
+      if (idleCallbacks  == 0 ){
+        return;
+      }
       var idleCallback = idleCallbacks[waitingFor].idleCallback();
+
       if (idleCallback){
         idleCallback();
       }
