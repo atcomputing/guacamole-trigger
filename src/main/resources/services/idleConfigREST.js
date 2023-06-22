@@ -1,5 +1,5 @@
 angular.module('guacTrigger').factory('idleConfigREST', ['$injector',
-        function idleConfigREST($injector) {
+  function idleConfigREST($injector) {
 
     // Required services
     var authenticationService = $injector.get('authenticationService');
@@ -9,19 +9,19 @@ angular.module('guacTrigger').factory('idleConfigREST', ['$injector',
 
     service.getConfig = function getConfig(){
 
-        // Build HTTP parameters set
-        var httpParameters = {
-            token : authenticationService.getCurrentToken()
-        };
+      // Build HTTP parameters set
+      var httpParameters = {
+        token : authenticationService.getCurrentToken()
+      };
 
-        // Retrieve active connection
-        return requestService({
-            method  : 'GET',
-            url     : 'api/session/ext/trigger/config/',
-            params  : httpParameters
-        });
+      // Retrieve active connection
+      return requestService({
+        method  : 'GET',
+        url     : 'api/session/ext/trigger/config/',
+        params  : httpParameters
+      });
 
     };
 
     return service;
-}]);
+  }]);

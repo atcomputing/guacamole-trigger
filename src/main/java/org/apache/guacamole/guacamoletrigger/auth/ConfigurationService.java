@@ -19,15 +19,8 @@ public class ConfigurationService{
 
     private Environment environment;
 
-    // for now dependency injectie is overkill
     public ConfigurationService () {
-        if (environment == null){
-            try {
-            environment = new LocalEnvironment();
-            } catch (GuacamoleException e){
-                LoggerFactory.getLogger(ConfigurationService.class).error("could not read guacamole.properties. Using defaults.");
-            }
-        }
+        environment = LocalEnvironment.getInstance();
     }
 
     public static final StringGuacamoleProperty START_COMMAND =

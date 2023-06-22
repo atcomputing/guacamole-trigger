@@ -1,10 +1,15 @@
 package org.apache.guacamole.guacamoletrigger.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
  * Circular buffer for most recent (tunnelid,Host)
  */
 public class TunnelBuffer {
 
+    private static final Logger logger = LoggerFactory.getLogger(TriggerREST.class);
     int index = 0;
     Tunnel2Host[] tunnel2Hosts;
 
@@ -13,6 +18,8 @@ public class TunnelBuffer {
     }
 
     public void push (String tunnelID, Host host){
+
+        logger.error("push tunnel: {} host:{}",tunnelID,host.getHostname());
         tunnel2Hosts[index] = new Tunnel2Host(tunnelID,host.getHostname()) ;
         this.index = ++index % tunnel2Hosts.length;
     }
