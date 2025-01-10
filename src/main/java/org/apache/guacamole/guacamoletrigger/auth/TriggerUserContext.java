@@ -120,12 +120,19 @@ public class TriggerUserContext extends AbstractUserContext {
         //
         // }
         // String userName = authUser.getCredentials().getUsername();
-        String userName = authUser.getAuthenticationProvider().getUserContext(authUser).self().getIdentifier();
+        String userName;
+        if (authUser.getAuthenticationProvider().getIdentifier() == "openid"){
+            // The OAuth/OpenID Authentication Provider has no UserContext
+            userName = authUser.getIdentifier();
+        } else {
+            userName = authUser.getAuthenticationProvider().getUserContext(authUser).self().getIdentifier();
+        }
 
         if (userName == null){
-
             logger.info("could not get a username");
             userName =  AuthenticatedUser.ANONYMOUS_IDENTIFIER;
+        } else {
+            logger.info("found username {}." , userName ); 
         }
 
         TunnelBuffer tunnelBuffer = user2TunnelBuffer.get(userName);
