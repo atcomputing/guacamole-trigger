@@ -49,6 +49,7 @@ public class TriggerREST {
     @Path("host/{tunnelID}")
     public Map<String, String> getHostInfo(@PathParam("tunnelID")String tunnelID ) throws GuacamoleException {
 
+        ConfigurationService settings= new ConfigurationService();
         Host host = tunnelBuffer.get(tunnelID);
 
         if (host != null ){
@@ -58,6 +59,7 @@ public class TriggerREST {
             anser.put("hostname",host.getHostname());
             anser.put("status",host.getStatus().name());
             anser.put("console",host.getConsole());
+            anser.put("consoleTitle", settings.getConsoleTitle());
 
             logger.info("Rest {}: {} {} ", tunnelID, host.getHostname(), host.getStatus().name()   );
             return anser;

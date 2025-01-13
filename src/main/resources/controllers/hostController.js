@@ -10,7 +10,8 @@ angular.module('guacTrigger').controller('hostController', ['$scope','$rootScope
     var defaultHost = {
       hostname: "Host",
       console: "",
-      status: "UNSET"
+      status: "UNSET",
+      consoleTitle: "Your Lab is being deployed:"
     };
 
     $rootScope.showBootNotification = $rootScope.showBootNotification || false;

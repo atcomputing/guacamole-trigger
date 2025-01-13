@@ -19,7 +19,8 @@
             <!-- </div> -->
             <!-- FIXME make title console configerable -->
             <!-- <h1 class=console-title>Host:{{ host.hostname}} is booting</h1>> -->
-            <h1 class="console-title">Your Lab is being deployed:</h1>
+            <!-- <h1 class="console-title">Your Lab is being deployed:</h1> -->
+            <h1 class="console-title">{{ $root.host.consoleTitle }}</h1>
             <console  output="$root.host.console"></console>
     </div>
 </div>

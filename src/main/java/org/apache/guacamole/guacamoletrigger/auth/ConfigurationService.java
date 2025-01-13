@@ -71,6 +71,14 @@ public class ConfigurationService{
 
     };
 
+    public static final StringGuacamoleProperty CONSOLE_TITLE =
+        new StringGuacamoleProperty () {
+
+        @Override
+        public String getName() { return "console-title"; }
+
+    };
+
     public String getStartCommand () throws GuacamoleException {
         return environment.getProperty(START_COMMAND);
     }
@@ -97,5 +105,9 @@ public class ConfigurationService{
 
     public File getGuacamoleHome() throws GuacamoleException {
         return environment.getGuacamoleHome();
+    }
+
+    public String getConsoleTitle () throws GuacamoleException {
+        return environment.getProperty(CONSOLE_TITLE, "Your Lab is being deployed:");
     }
 }
