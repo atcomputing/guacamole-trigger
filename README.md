@@ -13,7 +13,7 @@ This plugin also provides a way to stop remote desktops that are idle.
 
 With this plugin you can define a `start-command` and `stop-command`.
 Guacamole makes it possible for plugins to listen to the creation and closing of connections.
-Based on this a start or stop command is trigged.
+Based on this a start or stop command is triggered.
 
 ### automatic start
 
@@ -25,19 +25,19 @@ and will run `start-command` if that is not the case.
 This plugin tracks how many connections there are to each host/remote desktop.
 If the last connection is closed Guacamole will run the stop command for that host.
 
-This plugin can also track if a user is using Guacamole, and can close connection if the user has not moved the mouse ore used the keyboard for `disconnect-time`
+This plugin can also track if a user is using Guacamole, and can close connection if the user has not moved the mouse or used the keyboard for `disconnect-time`
 So the stop command is, run even when the user has Guacamole open in the background for a long time.
 
 There are some limitation with automatic stop:
 
 * This plugin only know about Guacamole connections. So it might stop machines your are still using via another method.
-* This plugin only stop machines when connection count changes to 0, not when the count is already 0. So it wont stop machines that have not been connected to Guacamole
+* This plugin only stops machines when connection count changes to 0, not when the count is already 0. So it wont stop machines that have not been connected to Guacamole
 * Connection count is stored in memory. 
   - If you restart Guacamole it will lose track of which hosts are still running.
   - You cant run guacamole trigger in HA setup, were multiple guacamole instances connect to the same machines.
 * This plugin will distinguish hosts by their hostname field in de connection config. If you refer to the same host with multiple names in de connection config, then Guacamole can't track the connection count correctly
 
-If this is a problem, you can only use automatic start. Then you must configure the hosts to automatically shutdown, after noone has been logged in for a while.
+If this is a problem, you can only use automatic start. Then you must configure the hosts to automatically shutdown, after no one has been logged in for a while.
 
 ## Installation
 Download pluging from [release](https://github.com/atcomputing/guacamole-trigger/releases/latest)
@@ -56,18 +56,27 @@ Example Configuration can be found [here](examples)
 You can set:
 
 * `start-command`: Shell command to run for start. This line will be run by /bin/sh in UNIX systems.
-    Your working directory will GUACAMOLE_HOME.
+    Your working directory will GUACAMOLE_HOME. All of the connection parameters of Guacamole are available
+    as environment variable to this script (for example `$server_layout` and `$resize_method` for
+    RDP connections). The major available parameters are
 
-    * `$hostname` will be replaced by host you are connection to
-    * `guacamoleUsername` is replaced by which Guacamole user is trying to connect
+    * `$hostname` will be replaced by host you are connecting to
+    * `$username` will be replaced by the username you are connecting with
+    * `$guacamoleUsername` for backward compatibility with previous versions of this module
+    * `$protocol` is replaced by the protocol being used by Guacamole for this connection
+    * `$port` is replaced by the port used by Guacamole for this connection
 
-  For example:  `start-command: start.sh $hostname`
+For example:  `start-command: start.sh $hostname`
 
 * `stop-command`: Shell command to run for start. This line will be run by /bin/sh in UNIX systems.
-    Your working directory will GUACAMOLE_HOME.
+    Your working directory will GUACAMOLE_HOME. The same environment variables as the start command
+    are available to the stop command
 
-    * `$hostname` will be replaced by host you are connection to
-    * `guacamoleUsername` is replaced by which Guacamole user is trying to connect
+    * `$hostname` will be replaced by host you are connecting to
+    * `$username` will be replaced by the username you are connecting with
+    * `$guacamoleUsername` for backward compatibility with previous versions of this module
+    * `$protocol` is replaced by the protocol being used by Guacamole for this connection
+    * `$port` is replaced by the port used by Guacamole for this connection
 
   For example:  `start-command: stop.sh $hostname`.
 
@@ -94,7 +103,7 @@ You can set:
 There are a couple of things you need to consider when writing start and stop commands:
 
 * The output of your command will be displayed to the user that triggers the start command.
-* exit status codes of your command are used to determine the succes of the command. For now only a warning is printed in the logs of Guacamole if this is non zero.
+* exit status codes of your command are used to determine the success of the command. For now only a warning is printed in the logs of Guacamole if this is non zero.
 * the time the commands take to run is the time that the plugin assumes it takes to start/stop the host.
     * If your command exits before the guacd could connect, the user gets an error message that no connection could be made.
       You could add a sleep statement to prevent this.
