@@ -59,7 +59,7 @@ public class TriggerREST {
             anser.put("hostname",host.getHostname());
             anser.put("status",host.getStatus().name());
             anser.put("console",host.getConsole());
-            anser.put("consoleTitle", settings.getConsoleTitle());
+            anser.put("consoleTitle", settings.getConsoleTitle().replaceAll("\\$hostname", host.getHostname()));
 
             logger.info("Rest {}: {} {} ", tunnelID, host.getHostname(), host.getStatus().name()   );
             return anser;
