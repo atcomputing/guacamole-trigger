@@ -97,6 +97,14 @@ For example:  `start-command: start.sh $hostname`
 * `command-timeout`: Time in seconds for how long a start/stop command can run before it's killed. To make sure every command terminates eventually.
 
     default: 300
+    
+* `console-title`: The title that will be used on the session console while the connection has not yet been established. If the variable `$hostname` is include in the title it will be replaced by the connection hostname.
+
+  For example: `console-title: Votre machine ($hostname) est en train de démarrer"
+  
+  Note that the encoding of the string `console-title` must be the same as used by in the `-Dfile.encoding` variable passed in `JAVA_OPTS` and `CATALINA_OPTS`. By default this is `ISO-8859-1`. If accented or UTF-8 characters in the `console-title` are not correctly displayed, check the encoding `guacamole.properties` or modify `JAVA_OPTS` and `CATALINA_OPTS` to include the correct encoding.
+
+    default: "Your Lab is being deployed:"
 
 ## Writing start/stop commands
 
