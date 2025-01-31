@@ -235,7 +235,7 @@ public class Host  {
         // if Tunnel is already closed, try to start host direct
         Runnable startTask = new Runnable() { public void run() { start(user, env); }};
         int period = 200;
-        long endpoll = System.currentTimeMillis() + 10000; // 10 seconds # TODO make configurable
+        long endpoll = System.currentTimeMillis() + (settings.getPollTimeout() * 1000);
         Runnable poll =  new Runnable() {
             public void run() {
                 // host still is unreachable start host

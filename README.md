@@ -106,6 +106,10 @@ For example:  `start-command: start.sh $hostname`
 
     default: "Your Lab is being deployed:"
 
+* `poll-timeout`: This in seconds to wait when polling open tunnel before calling the start script. 
+
+    default: 5
+
 ## Writing start/stop commands
 
 There are a couple of things you need to consider when writing start and stop commands:

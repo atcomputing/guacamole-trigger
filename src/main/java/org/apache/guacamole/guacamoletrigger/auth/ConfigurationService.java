@@ -71,6 +71,14 @@ public class ConfigurationService{
 
     };
 
+    public static final IntegerGuacamoleProperty POLL_TIMEOUT=
+        new IntegerGuacamoleProperty () {
+
+        @Override
+        public String getName() { return "poll-timeout"; }
+
+    };    
+
     public static final StringGuacamoleProperty CONSOLE_TITLE =
         new StringGuacamoleProperty () {
 
@@ -103,6 +111,10 @@ public class ConfigurationService{
         return environment.getProperty(COMMAND_TIMEOUT,300);
     }
 
+    public int getPollTimeout() throws GuacamoleException {
+        return environment.getProperty(POLL_TIMEOUT,5);
+    }
+    
     public File getGuacamoleHome() throws GuacamoleException {
         return environment.getGuacamoleHome();
     }
