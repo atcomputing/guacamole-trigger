@@ -235,18 +235,16 @@ public class Host  {
         // if Tunnel is already closed, try to start host direct
         Runnable startTask = new Runnable() { public void run() { start(user, env); }};
         int period = 200;
+        long endpoll = System.currentTimeMillis() + (settings.getPollTimeout() * 1000);
         Runnable poll =  new Runnable() {
             public void run() {
-
-                int pollcounter = 0;
-                pollcounter++;
                 // host still is unreachable start host
                 if ( tunnel.isOpen()){
-                    if (pollcounter * period < 10000){ // 60 seconds # TODO make configurable
+                    if (System.currentTimeMillis() < endpoll){
                         connecting = executor.schedule(this,period,TimeUnit.MILLISECONDS);
                     } else{
 
-                        logger.debug("start command after:",(period * pollcounter ) / 1000);
+                        logger.debug("start command at: {}",System.currentTimeMillis());
                         starting = executor.schedule(startTask,0,TimeUnit.MILLISECONDS);
                     }
                 } else {
