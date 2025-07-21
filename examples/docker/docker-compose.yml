@@ -1,14 +1,14 @@
-version: "3"
+---
 services:
 
   guacd:
     container_name: guacd
-    image: guacamole/guacd:1.5.2
+    image: guacamole/guacd:1.6.0
     networks:
       - guacamole
 
     environment:
-      GUACD_LOG_LEVEL: debug
+      LOG_LEVEL: debug
     volumes:
       - /etc/localtime:/etc/localtime:ro
 
@@ -18,19 +18,16 @@ services:
     environment:
       GUACD_HOSTNAME: guacd
       GUACAMOLE_HOME: /etc/guacamole
+      # CONSOLE_TITLE: test title
       ENABLE_WEBSOCKET: "true"
       # START_COMMAND: "docker run --rm --network  docker_guacamole --name $$hostname -e 'VNC_PW=test' consol/centos-xfce-vnc || true"
       START_COMMAND: extensions/start.sh
       # STOP_COMMAND: "docker stop -t 120  $$hostname && echo stopping && sleep  60"
       STOP_COMMAND: "extensions/stop.sh $$hostname"
       SHUTDOWN_DELAY: 90
-      COMMAND_TIMEOUT: 600
+      COMMAND_TIMEOUT: 6000
       IDLE_TIME: 20
-      DISCONNECT_TIME: 120
-      # API_SESSION_TIMEOUT: 1
-
-      SECRET_KEY: test
-      JSON_SECRET_KEY: 4C0B569E4C96DF157EEE1B65DD0E4D41
+      DISCONNECT_TIME: 1200
     volumes:
       - ./extensions/:/etc/guacamole/extensions/:z
       - ./user-mapping.xml:/etc/guacamole/user-mapping.xml:z

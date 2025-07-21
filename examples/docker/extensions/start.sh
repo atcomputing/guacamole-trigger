@@ -1,11 +1,17 @@
 #! /bin/bash
-env
-echo "$(tput  -T xterm setaf 1 ) test" # test make red
-for i in {1..20}; do
-    echo "$i"
-    sleep 1
-done;
-# false
+cat << EOF
+
+You custom script running here:
+
+You could use it to start Host $hostaname
+
+For a user: $guacamoleUsername
+
+guacamole will automaticly connect to $hostname via $protocol on port $port
+
+EOF
+
+sleep 10
 docker run --rm  -d --network  docker_guacamole --name "$hostname" -e 'VNC_PW=test' consol/rocky-xfce-vnc
 timeout 20 docker logs -f "$hostname"
 true
