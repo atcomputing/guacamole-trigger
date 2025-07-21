@@ -1,0 +1,12 @@
+{
+    "NAME"   : "English",
+    "APP"    : {
+        "NAME"                  : "AT LABS",
+        "VERSION"               : "main-13062-guacamole"
+    },
+
+    "GUACAMOLE_TRIGGER" : {
+        "IDLE_WARNING"        : "Host will disconnect if idle",
+        "CONSOLE_TITLE"       : "Custom"
+    }
+}

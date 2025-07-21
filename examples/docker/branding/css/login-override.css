@@ -1,0 +1,13 @@
+.login-ui .login-dialog .logo {
+        background-image: url('app/ext/atbrandingns/images/logo.png');
+	width: 9em;
+	-webkit-background-size: 9em auto;
+	height: 9em;
+}
+div.login-ui {
+	background: #0E3E56;
+	background-color: #0E3E56;
+}
+.login-ui .login-dialog {
+	background-color: white;
+}

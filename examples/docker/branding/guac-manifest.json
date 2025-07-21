@@ -1,0 +1,16 @@
+{
+	"guacamoleVersion" : "*",
+	"name"             : "atbranding",
+	"namespace"        : "atbrandingns",
+"smallIcon"        : "images/logo-64.png",
+	"translations"     : [
+	"translations/en.json"
+],
+"css"              : [
+	"css/login-override.css"
+],
+"resources"        : {
+	"images/logo.png"    : "image/png",
+	"images/logo-64.png" : "image/png"
+}
+}
